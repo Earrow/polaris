@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block head %}
+    {{ super() }}
+
+    <style type="text/css">
+        th { text-align:center; }
+        td { text-align:center; }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+        function del() {
+            var msg = "确定删除该项目吗？";
+            if (confirm(msg)===true){
+                return true;
+            }else{
+                return false;
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block page_content %}
+    {%- if current_user.is_administrator() -%}
+        <h4><a href="{{ url_for('admin.create_project') }}"><span class="label label-primary">新建项目</span></a></h4>
+    {%- else -%}
+        <h4><a href="{{ url_for('project.apply') }}"><span class="label label-primary">申请项目</span></a></h4>
+    {%- endif -%}
+
+    <div class="tables">
+        <div class="bs-example widget-shadow" data-example-id="hoverable-table">
+            <h4>项目列表：</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>项目名</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                {%- for project in projects -%}
+                    {%- if project.allowed -%}
+                    <tr>
+                        <td><a href={{ url_for("project.project_info", project_id=project.id) }}>{{ project.name }}</a></td>
+                        <td>
+                            <a href={{ url_for("project.register", project_id=project.id) }}>申请加入</a>&nbsp&nbsp
+                            <a href={{ url_for("project.delete", project_id=project.id) }} onclick="javascript:return del()">删除</a>
+                        </td>
+                    </tr>
+                    {%- endif -%}
+                {%- endfor -%}
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination">
+        {{ macros.pagination_widget(pagination, '.project_list') }}
+    </div>
+{% endblock %}

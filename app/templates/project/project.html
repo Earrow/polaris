@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block page_content %}
+<div class="col-md-4">
+    {% if project %}
+        {# 编辑项目信息 #}
+        <form method="POST" action={{ url_for(".project_info", project_id=project.id) }}>
+            {{ form.csrf_token }}
+            {% if can_edit %}
+                {{ wtf.form_field(form.name) }}
+                <br>
+                {{ wtf.form_field(form.info) }}
+                {{ wtf.form_field(form.server_id) }}
+                {{ wtf.form_field(form.submit) }}
+            {% else %}
+                {{ wtf.form_field(form.name) }}
+                <br>
+                {{ wtf.form_field(form.info, readonly='readonly') }}
+            {% endif %}
+        </form>
+    {% else %}
+        {# 申请新项目 #}
+        {{ wtf.quick_form(form) }}
+    {% endif %}
+
+</div>
+{% endblock %}

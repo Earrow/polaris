@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block scripts -%}
+    {{ super() }}
+    {{ pagedown.include_pagedown() }}
+{%- endblock %}
+
+{% block page_content %}
+    <div class="panel-info widget-shadow">
+        {{ wtf.quick_form(form) }}
+    </div>
+{% endblock %}

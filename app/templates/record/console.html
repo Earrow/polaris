@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+
+    <style type="text/css">
+        .loading {
+            display: block;
+            z-index: 1001;
+            width: 20%;
+            height: 20%;
+            text-align:center;
+        }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+        function fun() {
+            var data = {
+                "task_name": "{{ task_name }}",
+                "build_number": {{ build_number }}
+            };
+
+            var console_output = "";
+            var end = false;
+
+            $.ajax({
+                type: 'GET',
+                url: '/records/console_check',
+                data: data,
+                dataType: 'json',
+                async:false,
+                success: function(data) {
+                    console_output = data.ret;
+                    end = data.end;
+                },
+                error: function(xhr, type) {}
+            });
+
+            var old_console_output = $("p[id='console_output']").html();
+            $("p[id='console_output']").html(old_console_output + console_output);
+
+            window.scrollTo(0,document.body.scrollHeight);
+            if (end) {
+                document.getElementById("loading").style.display = "none";
+                return;
+            }
+            setTimeout("fun()", 1000);
+        }
+
+        setTimeout("fun()", 10);
+    </script>
+{% endblock %}
+
+{% block page_content %}
+    <div class="panel-info widget-shadow">
+        <p id="console_output">
+            {{ ret|safe }}
+        </p>
+        <div id="loading" class="loading">
+            <img src="{{ url_for('static', filename='loading.gif') }}" height="30" width="30"/>
+        </div>
+    </div>
+{% endblock %}

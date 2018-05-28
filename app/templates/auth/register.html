@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Polaris - 注册{% endblock %}
+
+{% block page_content %}
+<h3 class="title1">注册</h3>
+<div class="sign-up-row widget-shadow">
+    <form method="POST"  action="{{ url_for('auth.register') }}">
+        {{ form.hidden_tag() }}
+        <div class="sign-u">
+            {{ wtf.form_field(form.email) }}
+            <div class="clearfix"> </div>
+        </div>
+        <div class="sign-u">
+            {{ wtf.form_field(form.password) }}
+            <div class="clearfix"> </div>
+        </div>
+        <div class="sign-u">
+            {{ wtf.form_field(form.password_confirm) }}
+            <div class="clearfix"> </div>
+        </div>
+        <div class="sub_home">
+            <form>
+                {{ wtf.form_field(form.submit) }}
+            </form>
+            <div class="clearfix"> </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{%block page_class%}
+    class="main-page signup-page "
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Polaris - 登录{% endblock %}
+
+{% block page_content %}
+<h3 class="title1">登录</h3>
+<div class="widget-shadow">
+    <div class="login-top">
+        <h4>欢迎使用Polaris自动化测试平台！ <br> 新用户？ <a href="{{ url_for('auth.register') }}">  注册 »</a> </h4>
+    </div>
+    <div class="login-body">
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            {{ wtf.form_field(form.email, class="form-control user", placeholder="username@broadlink.com.cn") }}
+            {{ wtf.form_field(form.password, class="form-control lock", placeholder="password") }}
+            {{ wtf.form_field(form.submit) }}
+            <div class="forgot-grid">
+                {{ wtf.form_field(form.remember_me) }}
+                <div class="clearfix"> </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{%block page_class%}
+class="main-page login-page "
+{% endblock %}

@@ -1,0 +1,267 @@
+{% block doc -%}
+{# 模板参考：http://sc.chinaz.com/moban/170517161610.htm #}
+
+<!DOCTYPE html>
+<html{% block html_attribs %}{% endblock html_attribs %}>
+{%- block html %}
+    <head>
+    {%- block head %}
+        <title>{% block title %}Polaris{% endblock title %}</title>
+
+        {%- block metas %}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        {%- endblock metas %}
+
+        <link rel="shortcut icon" href="{{ url_for('static', filename = 'favicon.ico') }}"
+              type="image/x-icon">
+        <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}"
+              type="image/x-icon">
+
+        {%- block styles %}
+        <script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
+        <link href="{{ url_for('static', filename = 'css/bootstrap.css') }}" rel='stylesheet' type='text/css' />
+        <link href="{{ url_for('static', filename = 'css/style.css') }}" rel='stylesheet' type='text/css' />
+        <link href="{{ url_for('static', filename = 'css/font-awesome.css') }}" rel="stylesheet">
+        <script src="{{ url_for('static', filename = 'js/jquery-1.11.1.min.js') }}"></script>
+        <script src="{{ url_for('static', filename = 'js/modernizr.custom.js') }}"></script>
+        <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:400,300,300italic,400italic,700,700italic' rel='stylesheet' type='text/css'>
+        <link href="{{ url_for('static', filename = 'css/animate.css') }}" rel="stylesheet" type="text/css" media="all">
+        <script src="{{ url_for('static', filename = 'js/wow.min.js') }}"></script>
+        <script>
+             new WOW().init();
+        </script>
+        <script src="{{ url_for('static', filename = 'js/metisMenu.min.js') }}"></script>
+        <script src="{{ url_for('static', filename = 'js/custom.js') }}"></script>
+        <link href="{{ url_for('static', filename = 'css/custom.css') }}" rel="stylesheet">
+        {%- endblock styles %}
+    {%- endblock head %}
+    </head>
+    <body class="cbp-spmenu-push" {% block body_attribs %}{% endblock body_attribs %}>
+    <div class="main-content">
+        {% block body -%}
+        {% block navbar -%}
+        {%- endblock navbar %}
+        <div class="container" style="position:absolute;z-index:9999;left:19%;">
+            {% for message in get_flashed_messages(with_categories=True) %}
+            <div class="alert alert-{{ message[0] }}">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                {{ message[1] }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!--侧边栏-->
+        <div class=" sidebar" role="navigation">
+            <div class="navbar-collapse">
+                <nav class="cbp-spmenu cbp-spmenu-vertical cbp-spmenu-left" id="cbp-spmenu-s1">
+                    <ul class="nav" id="side-menu">
+                        <li>
+                            <a href="{{ url_for('main.index') }}"><i class="fa fa-home nav_icon"></i>首页</a>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fa fa-cogs nav_icon"></i>基础管理<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level collapse">
+                                <li>
+                                    <a href="{{ url_for('project.project_list') }}">项目管理</a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('server.servers') }}">服务器管理</a>
+                                </li>
+                            </ul>
+                            <!-- /nav-second-level -->
+                        </li>
+                        <li class="">
+                            <a href="#"><i class="fa fa-book nav_icon"></i>任务管理<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level collapse">
+                                <li>
+                                    {% if current_user.active_project -%}
+                                        <a href="{{ url_for('task.task_list', project_id=current_user.active_project.id) }}"
+                                           onclick="return true">测试执行</a>
+                                    {%- else -%}
+                                        <a href="#" onclick="alert('请先激活一个项目'); return false">测试执行</a>
+                                    {%- endif %}
+                                </li>
+                                <li>
+                                    {% if current_user.active_project -%}
+                                        <a href="{{ url_for('record.record_list', project_id=current_user.active_project.id, task_id=-1) }}"
+                                           onclick="return true">测试记录</a>
+                                    {%- else -%}
+                                        <a href="#" onclick="alert('请先激活一个项目'); return false">测试记录</a>
+                                    {%- endif %}
+                                </li>
+                            </ul>
+                        </li>
+                        {% if current_user.is_administrator() -%}
+                        <li>
+                            <a href="#"><i class="fa fa-envelope nav_icon"></i>申请列表<span class="nav-badge-btm"><div id="aan"></div></span><span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level collapse">
+                                <li>
+                                    <a href="{{ url_for('admin.project_applications') }}">项目申请<span class="nav-badge"><div id="pan"></div></span></a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('admin.registration_applications') }}">项目人员申请<span class="nav-badge"><div id="ran"></div></span></a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+							<a href="http://{{ config['JENKINS_HOST'] }}" target="_Blank" class="chart-nav"><i class="fa fa-bar-chart nav_icon"></i>后台Jenkins</a>
+						</li>
+                        {%- endif %}
+                        <li>
+                            <a href="#"><i class="fa fa-file-text-o nav_icon"></i>关于平台<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level collapse">
+                                <li>
+                                    <a href="{{ url_for('main.help_page') }}">使用说明</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                    </ul>
+                    <div class="clearfix"> </div>
+                </nav>
+            </div>
+        </div>
+        <!-- 顶栏 -->
+        <div class="sticky-header header-section ">
+            <div class="header-left">
+                <button id="showLeftPush"><i class="fa fa-bars"></i></button>
+                <div class="logo">
+                    <a href="{{ url_for('main.index') }}">
+                        <h1>Polaris</h1>
+                        <span>自动化测试平台</span>
+                    </a>
+                </div>
+                <div class="clearfix"> </div>
+            </div>
+            <div class="header-right">
+                <div class="profile_details_left">
+                    <ul class="nofitications-dropdown">
+                        <li class="dropdown head-dpdn">
+                            {%- if current_user.is_authenticated -%}
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                {% if current_user.active_project -%}
+                                    {{ current_user.active_project.name }}
+                                {%- else -%}
+                                    请激活一个项目
+                                {%- endif %}
+                            </a>
+                                <ul class="dropdown-menu">
+                                    {%- for project in current_user.editable_projects -%}
+                                        <li>
+                                            <a href="{{ url_for('project.set_active_project', project=project.id) }}">
+                                                <div class="task-info">
+                                                    <span class="task-desc">{{ project.name }}</span>
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    {%- endfor -%}
+                                    {%- for project in current_user.testable_projects -%}
+                                        <li>
+                                            <a href="#">
+                                                <div class="task-info">
+                                                    <span class="task-desc">{{ project.name }}</span>
+                                                    <div class="clearfix"></div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    {%- endfor -%}
+                                </ul>
+                            {%- endif -%}
+						</li>
+                    </ul>
+                    <div class="clearfix"> </div>
+                </div>
+                <div class="profile_details">
+                    <ul>
+                        <li class="dropdown profile_details_drop">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                <div class="profile_img">
+                                    <div class="user-name">
+                                        {% if current_user.is_authenticated -%}
+                                            <p>{{current_user.email.split('@')[0]}}</p>
+                                            <span>{{current_user.role.name}}</span>
+                                        {%- else -%}
+                                            <p>Anonymous</p>
+                                        {%- endif %}
+                                    </div>
+                                    <i class="fa fa-angle-down lnr"></i>
+                                    <i class="fa fa-angle-up lnr"></i>
+                                    <div class="clearfix"></div>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu drp-mnu">
+                                {% if current_user.is_authenticated -%}
+                                    <li><a href="{{ url_for('auth.logout') }}"><i class="fa fa-sign-out"></i>登出</a></li>
+                                {%- else -%}
+                                    <li><a href="{{ url_for('auth.login') }}"><i class="fa fa-sign-out"></i>登录</a></li>
+                                {%- endif %}
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="clearfix"> </div>
+            </div>
+            <div class="clearfix"> </div>
+        </div>
+
+        <div id="page-wrapper">
+            <div {%block page_class%}class="main-page"{% endblock page_class %}>
+                {% block page_content -%}
+                {%- endblock page_content %}
+            </div>
+        </div>
+    </div>
+
+    <!--footer-->
+    <div class="footer">
+       <p>Version 0.7</p>
+    </div>
+    <!--//footer-->
+
+    {% block scripts -%}
+        {% if current_user.is_administrator() -%}
+            <script>
+                $(function() {
+                    $.ajax({
+                        type: 'GET',
+                        url: '{{ url_for("admin.get_application_number") }}',
+                        dataType: 'json',
+                        success: function(data) {
+                            $("#ran").html(data.registration_applications_number);
+                            $("#pan").html(data.project_applications_number);
+                            $("#aan").html(data.project_applications_number + data.registration_applications_number);
+                        },
+                        error: function(xhr, type) {}
+                    });
+                });
+            </script>
+        {%- endif %}
+        <script src="{{ url_for('static', filename = 'js/classie.js') }}"></script>
+        <script>
+            var menuLeft = document.getElementById( 'cbp-spmenu-s1' ),
+                showLeftPush = document.getElementById( 'showLeftPush' ),
+                body = document.body;
+
+            showLeftPush.onclick = function() {
+                classie.toggle( this, 'active' );
+                classie.toggle( body, 'cbp-spmenu-push-toright' );
+                classie.toggle( menuLeft, 'cbp-spmenu-open' );
+                disableOther( 'showLeftPush' );
+            };
+
+            function disableOther( button ) {
+                if( button !== 'showLeftPush' ) {
+                    classie.toggle( showLeftPush, 'disabled' );
+                }
+            }
+        </script>
+        <script src="{{ url_for('static', filename = 'js/jquery.nicescroll.js') }}"></script>
+        <script src="{{ url_for('static', filename = 'js/scripts.js') }}"></script>
+        <script src="{{ url_for('static', filename = 'js/bootstrap.js') }}"> </script>
+    {%- endblock scripts %}
+    {%- endblock body %}
+    </body>
+{%- endblock html %}
+</html>
+{% endblock doc -%}

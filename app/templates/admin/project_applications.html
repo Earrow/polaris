@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+
+    <style type="text/css">
+        th { text-align:center; }
+        td { text-align:center; }
+    </style>
+{% endblock %}
+
+{% block page_content %}
+<div class="tables">
+    <div class="bs-example widget-shadow" data-example-id="hoverable-table">
+        <h4>新项目申请列表：</h4>
+        <table class="table table-bordered">
+            <tr>
+                <th>申请用户</th>
+                <th>申请建立项目名</th>
+                <th>申请建立项目信息</th>
+                <th>申请时间</th>
+                <th>操作</th>
+            </tr>
+            {% for application in applications -%}
+            <tr>
+                <td>{{ application.user.email }}</td>
+                <td>{{ application.project.name }}</td>
+                <td>{{ application.project.info }}</td>
+                <td>{{ application.timestamp }}</td>
+                <td>
+                    <a href={{ url_for("admin.project_applications_handle",
+                    application_id=application.id, application_state="ok") }}>批准</a>
+                    &nbsp&nbsp
+                    <a href={{ url_for("admin.project_applications_handle",
+                    application_id=application.id, application_state="no") }}>拒绝</a>
+                </td>
+            </tr>
+            {%- endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

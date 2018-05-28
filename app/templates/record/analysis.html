@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block head -%}
+    {{ super() }}
+
+    <script src="{{ url_for('static', filename='echarts.min.js') }}"></script>
+{%- endblock %}
+
+{% block page_content %}
+    <div class="panel-info widget-shadow">
+        {% if ret is string -%}
+            <p>
+                {{ ret|safe }}
+            </p>
+        {%- endif %}
+
+        {% if ret is mapping -%}
+            {% block scripts -%}
+                {{ super() }}
+
+                <div id="main" style="width: 600px;height:400px;position:relative;left:50%;transform:translateX(-50%);"></div>
+                <script type="text/javascript">
+                    var myChart = echarts.init(document.getElementById('main'));
+
+                    var option = {
+                        title: {
+                            text: '测试结果统计',
+                            left: 'center'
+                         },
+                        itemStyle: {
+                            emphasis: {
+                                shadowBlur: 200,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        },
+                        tooltip : {
+                            trigger: 'item',
+                            formatter: "{b} : {c} ({d}%)"
+                        },
+                        calculable : true,
+                        series : [
+                            {
+                                name: '测试结果统计',
+                                type: 'pie',
+                                radius: '55%',
+                                data:[
+                                    {value:{{ ret['tests'] }} - {{ ret['errors'] }} - {{ ret['failures'] }}, name:'成功'},
+                                    {value:{{ ret['failures'] }}, name:'失败'},
+                                    {value:{{ ret['errors'] }}, name:'出错'},
+                                    {value:{{ ret['skip'] }}, name:'跳过'}
+                                ]
+                            }
+                        ]
+                    };
+
+                    myChart.setOption(option);
+                </script>
+            {%- endblock %}
+        {%- endif %}
+    </div>
+{% endblock %}
+

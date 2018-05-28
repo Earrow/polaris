@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block head %}
+    {{ super() }}
+
+    <style type="text/css">
+        #command_content { height: 200px; }
+        #result_statistics_content { height: 200px; }
+    </style>
+{% endblock %}
+
+{% block page_content %}
+<form class="form" method="POST">
+    {{ form.csrf_token }}
+
+    {% if can_edit %}
+        {{ wtf.form_field(form.name) }}
+        {{ wtf.form_field(form.info) }}
+        {{ wtf.form_field(form.command) }}
+        {{ wtf.form_field(form.result_statistics) }}
+        {{ wtf.form_field(form.crontab) }}
+        {{ wtf.form_field(form.scheduler_enable) }}
+        {{ wtf.form_field(form.submit) }}
+    {% else %}
+        {{ wtf.form_field(form.name) }}
+        {{ wtf.form_field(form.info, readonly='readonly') }}
+        {{ wtf.form_field(form.command, readonly='readonly') }}
+        {{ wtf.form_field(form.result_statistics, readonly='readonly') }}
+        {{ wtf.form_field(form.crontab, readonly='readonly') }}
+        {{ wtf.form_field(form.scheduler_enable, readonly='readonly') }}
+    {% endif %}
+</form>
+{% endblock %}

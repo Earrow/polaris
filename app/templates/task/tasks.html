@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block head %}
+    {{ super() }}
+
+    <script>
+        function del() {
+            var msg = "确定删除该任务吗？";
+            if (confirm(msg)==true){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        function fun(task_id) {
+            var version = $("input[id='version'][name="+task_id+"]").val();
+            if (version === '')
+                alert('请输入版本号')
+            else {
+                var state = "";
+
+                var data = {
+                    "project_id": {{ project.id }},
+                    "task_id": task_id,
+                    "version": version
+                };
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/records/do_test',
+                    data: data,
+                    dataType: 'json',
+                    async: false,
+                    success: function(data) {
+                        state = data.state;
+                    },
+                    error: function(xhr, type) {}
+                });
+
+                if (state === "no_permission")
+                    alert('无权限，请先加入该项目');
+                else {
+                    window.location.href='/records/?project_id=' + {{ project.id }} + '&task_id=' + task_id;
+
+                    if (state === "no_permission")
+                        alert('无权限，请先加入该项目');
+                    else if (state === "timeout")
+                        alert('服务器连接离线，请检查服务器状态，恢复连接后任务会自动执行');
+                    else if (state === "wait")
+                        alert('由于服务器连接问题任务暂时无法执行，请稍后再试');
+                    else if (state === "busy")
+                        alert('当前任务正在执行中或等待执行，请稍后再试');
+                }
+            }
+        }
+    </script>
+
+    <style type="text/css">
+        th { text-align:center; }
+        td { text-align:center; }
+    </style>
+{% endblock %}
+
+{% block page_content %}
+    {% if current_user in project.editors -%}
+        <h4><a href="{{ url_for('task.create', project_id=project.id) }}"><span class="label label-primary">新建任务</span></a></h4>
+    {%- endif %}
+
+    <div class="tables">
+        <div class="bs-example widget-shadow" data-example-id="hoverable-table">
+            <h4>测试任务列表：</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>任务名</th>
+                        <th>版本号</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                {% for task in tasks -%}
+                    <tr>
+                        <td><a href={{ url_for('task.task_info', task_id=task.id) }}>{{ task.nickname }}</a></td>
+                        <td><input id="version" name={{ task.id }} type="text" style="width:100%;height:100%" /></td>
+                        <td>
+                            <a href="#" onclick="fun({{ task.id }})" style="padding:0.1px;width:50%">执行</a>&nbsp&nbsp
+                            <a href={{ url_for("task.analysis", task_id=task.id) }}>统计</a>&nbsp&nbsp
+                            <a href={{ url_for("task.delete", task_id=task.id) }} onclick="javascript:return del()">删除</a>
+                        </td>
+                    </tr>
+                {%- endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination">
+        {{ macros.pagination_widget(pagination, '.task_list', project_id=project.id) }}
+    </div>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block head %}
+    {{ super() }}
+
+    <style type="text/css">
+        th { text-align:center; }
+        td { text-align:center; }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+        function del() {
+            var msg = "确定删除该服务器吗？";
+            if (confirm(msg)==true){
+                return true;
+            }else{
+                return false;
+            }
+        }
+
+        function fun() {
+            $("tr.server_data").each(function () {
+                var data = {
+                    "server_id": $(this).attr('id')
+                };
+
+                var state = 0;
+                var os = "";
+                var disk_space = "";
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/servers/check_state',
+                    dataType: 'json',
+                    data: data,
+                    async:false,
+                    success: function(data) {
+                        state = data.state;
+                        os = data.os;
+                        disk_space = data.disk_space + " GB";
+                    },
+                    error: function(xhr, type) {}
+                });
+
+                if (state === 1) {
+                    $(this).children('td:eq(5)').text('在线');
+                    $(this).children('td:eq(5)').css("backgroundColor", "#00ff00");
+                }
+                else if (state === 0) {
+                    $(this).children('td:eq(5)').text('离线');
+                    $(this).children('td:eq(5)').css("backgroundColor", "#ff0000");
+                }
+                else if (state === -1) {
+                    $(this).children('td:eq(5)').text('不存在');
+                    $(this).children('td:eq(5)').css("backgroundColor", "#ff0000");
+                }
+                if (os === "") {
+                    os = "N/A";
+                    disk_space = "N/A";
+                }
+                $(this).children('td:eq(2)').text(os);
+                $(this).children('td:eq(4)').text(disk_space);
+            });
+
+            setTimeout("fun()", 10000)
+        }
+
+        setTimeout("fun()", 10);
+
+    </script>
+{% endblock %}
+
+{% block page_content %}
+    <h4><a href="{{ url_for('server.create') }}"><span class="label label-primary">添加服务器</span></a></h4>
+
+    <div class="tables">
+        <div class="bs-example widget-shadow" data-example-id="hoverable-table">
+            <h4>服务器状态及管理：</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>地址</th>
+                        <th>描述</th>
+                        <th>平台</th>
+                        <th>工作目录</th>
+                        <th>剩余空间</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                {% for server in servers -%}
+                    <tr class="server_data" id="{{ server.id }}">
+                        <td>{{ server.host }}</td>
+                        <td>{{ server.info }}</td>
+                        <td></td>
+                        <td>{{ server.workspace }}</td>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <a href={{ url_for("server.server_info", server_id=server.id) }}>配置</a>&nbsp&nbsp
+                            <a href={{ url_for("server.enable", server_id=server.id) }}>连接</a>&nbsp&nbsp
+                            <a href={{ url_for("server.delete", server_id=server.id) }} onclick="javascript:return del()">删除</a>
+                        </td>
+                    </tr>
+                {%- endfor %}
+            </table>
+        </div>
+    </div>
+
+    <div class="pagination">
+        {{ macros.pagination_widget(pagination, '.servers') }}
+    </div>
+{% endblock %}

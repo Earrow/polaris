@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block page_content %}
+    {%- if current_user.is_administrator() -%}
+        <h4><a href="{{ url_for('main.help_page_edit') }}"><span class="label label-primary">编辑</span></a></h4>
+        <br />
+    {%- endif -%}
+
+    <div class="panel-info widget-shadow">
+        {{ manual.body_html | safe }}
+    </div>
+{% endblock %}

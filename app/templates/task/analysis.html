@@ -1,0 +1,76 @@
+{% extends "record/records.html" %}
+
+{% block head %}
+    {{ super() }}
+
+    <script src="{{ url_for('static', filename='echarts.min.js') }}"></script>
+{% endblock %}
+
+{% block  pagination %}
+    <div class="pagination">
+        {{ macros.pagination_widget(pagination, 'task.analysis', task_id=task.id) }}
+    </div>
+{% endblock %}
+
+{% block page_content %}
+    <div class="panel-info widget-shadow">
+        <div id="main" style="width: 700px;height:400px;position:relative;left:50%;transform:translateX(-50%);"></div>
+
+        {{ super() }}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+        var myChart = echarts.init(document.getElementById('main'));
+
+        var option = {
+            backgroundColor: '#F5F5F5',
+            title: {
+                text: '各版本成功率统计',
+                left: 'center'
+             },
+            calculable : true,
+            xAxis : [
+                {
+                    type: 'category',
+                    name: '版本',
+                    boundaryGap: false,
+                    data: {{ version|safe }}
+                }
+            ],
+            yAxis : [
+                {
+                    type: 'value',
+                    name: '成功率',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                }
+            ],
+            series : [
+                {
+                    name:'成功率',
+                    type:'line',
+                    data:{{ value }},
+                    label: {show: true},
+                    hoverAnimation: true,
+                }
+            ],
+            dataZoom: [
+                {
+                    id: 'dataZoomX',
+                    type: 'slider',
+                    xAxisIndex: [0],
+                    filterMode: 'filter',
+                    start: {{ zoom_start }},
+                    end: 100
+                }
+            ]
+        };
+
+        myChart.setOption(option);
+    </script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block head %}
+    {{ super() }}
+
+    <style type="text/css">
+            th { text-align:center; }
+            td { text-align:center; }
+
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+        function fun1() {
+            $("tr.record_data").each(function () {
+                var record_state = $(this).children('td:eq(2)').text();
+
+                if (record_state === '1') {
+                    $(this).children('td:eq(2)').text('执行成功');
+                    $(this).children('td:eq(2)').css("backgroundColor", "#00ff00");
+                }
+                else if (record_state === '-1') {
+                    $(this).children('td:eq(2)').text('执行失败');
+                    $(this).children('td:eq(2)').css("backgroundColor", "#ff0000");
+                }
+                else if (record_state === '0') {
+                    $(this).children('td:eq(2)').text('执行中');
+                    $(this).children('td:eq(2)').css("backgroundColor", "yellow");
+                }
+                else if (record_state === '-2') {
+                    $(this).children('td:eq(2)').text('等待执行');
+                    $(this).children('td:eq(2)').css("backgroundColor", "yellow");
+                }
+            });
+        }
+
+        function fun() {
+            fun1();
+
+            var state = 0;
+            var data = {
+                "project_id": {{ project_id }}
+            };
+
+            $.ajax({
+                type: 'GET',
+                url: '/records/check_state',
+                data: data,
+                dataType: 'json',
+                async:false,
+                success: function(data) {
+                    state = data.state;
+                },
+                error: function(xhr, type) {}
+            });
+
+            if (state === 1)
+                location.reload();
+
+            setTimeout("fun()", 5000)
+        }
+
+        setTimeout("fun()", 10);
+
+    </script>
+{% endblock %}
+
+{% block page_content %}
+    <div class="tables">
+        <div class="bs-example widget-shadow" data-example-id="hoverable-table">
+            <h4>测试记录列表：</h4>
+            <table class="table table-bordered" id="records_table">
+                <thead>
+                    <tr>
+                        <th>任务名</th>
+                        <th>版本号</th>
+                        <th>执行状态</th>
+                        <th>执行记录</th>
+                    </tr>
+                </thead>
+                {% for record in records -%}
+                    <tr class="record_data">
+                        <td><a href={{ url_for('task.task_info', task_id=record.task.id) }}>{{ record.task.nickname }}</a></td>
+                        <td>{{ record.version }}</td>
+                        <td>{{ record.state }}</td>
+                        <td><a href={{ url_for('record.console', record_id=record.id) }}>日志</a>&nbsp&nbsp
+                            <a href={{ url_for('record.analysis', record_id=record.id) }}>统计</a>
+                        </td>
+                    </tr>
+                {%- endfor %}
+            </table>
+        </div>
+    </div>
+
+    {% block  pagination %}
+        <div class="pagination">
+            {{ macros.pagination_widget(pagination, '.record_list', project_id=project_id, task_id=task_id) }}
+        </div>
+    {% endblock %}
+{% endblock %}
