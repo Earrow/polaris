@@ -186,7 +186,17 @@
                                     <div class="user-name">
                                         {% if current_user.is_authenticated -%}
                                             <p>{{current_user.email.split('@')[0]}}</p>
-                                            <span>{{current_user.role.name}}</span>
+                                            {%- if current_user.role.name == 'Administrator' -%}
+                                                <span>平台管理员</span>
+                                            {%- else -%}
+                                                {%- if current_user.active_project -%}
+                                                    {%- if current_user in current_user.active_project.editors.all() -%}
+                                                        <span>项目管理员</span>
+                                                    {%- else -%}
+                                                        <span>测试员</span>
+                                                    {%- endif %}
+                                                {%- endif -%}
+                                            {%- endif -%}
                                         {%- else -%}
                                             <p>Anonymous</p>
                                         {%- endif %}
