@@ -67,6 +67,13 @@
                                 <li>
                                     <a href="{{ url_for('server.servers') }}">服务器管理</a>
                                 </li>
+                                <li>
+                                    {% if current_user.active_project -%}
+                                        <a href="{{ url_for('user.user_list', project_id=current_user.active_project.id) }}">用户管理</a>
+                                    {%- else -%}
+                                        <a href="#" onclick="alert('请先激活一个项目'); return false">用户管理</a>
+                                    {%- endif %}
+                                </li>
                             </ul>
                             <!-- /nav-second-level -->
                         </li>
@@ -96,10 +103,10 @@
                             <a href="#"><i class="fa fa-envelope nav_icon"></i>申请列表<span class="nav-badge-btm"><div id="aan"></div></span><span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level collapse">
                                 <li>
-                                    <a href="{{ url_for('admin.project_applications') }}">项目申请<span class="nav-badge"><div id="pan"></div></span></a>
+                                    <a href="{{ url_for('admin.registration_applications') }}">项目人员申请<span class="nav-badge"><div id="ran"></div></span></a>
                                 </li>
                                 <li>
-                                    <a href="{{ url_for('admin.registration_applications') }}">项目人员申请<span class="nav-badge"><div id="ran"></div></span></a>
+                                    <a href="{{ url_for('admin.project_applications') }}">项目申请<span class="nav-badge"><div id="pan"></div></span></a>
                                 </li>
                             </ul>
                         </li>
@@ -115,7 +122,6 @@
                                 </li>
                             </ul>
                         </li>
-
                     </ul>
                     <div class="clearfix"> </div>
                 </nav>
@@ -148,7 +154,7 @@
                                 <ul class="dropdown-menu">
                                     {%- for project in current_user.editable_projects -%}
                                         <li>
-                                            <a href="{{ url_for('project.set_active_project', project=project.id) }}">
+                                            <a href="{{ url_for('project.set_active_project', project_id=project.id) }}">
                                                 <div class="task-info">
                                                     <span class="task-desc">{{ project.name }}</span>
                                                     <div class="clearfix"></div>
@@ -158,7 +164,7 @@
                                     {%- endfor -%}
                                     {%- for project in current_user.testable_projects -%}
                                         <li>
-                                            <a href="#">
+                                            <a href="{{ url_for('project.set_active_project', project_id=project.id) }}">
                                                 <div class="task-info">
                                                     <span class="task-desc">{{ project.name }}</span>
                                                     <div class="clearfix"></div>

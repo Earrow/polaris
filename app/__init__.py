@@ -47,6 +47,7 @@ def create_app(config_name):
     from .record import record as record_blueprint
     from .server import server as server_blueprint
     from .main import main as main_blueprint
+    from .user import user as user_blueprint
 
     app.register_blueprint(main_blueprint)
     app.register_blueprint(project_blueprint, url_prefix='/projects')
@@ -55,5 +56,6 @@ def create_app(config_name):
     app.register_blueprint(task_blueprint, url_prefix='/tasks')
     app.register_blueprint(record_blueprint, url_prefix='/records')
     app.register_blueprint(server_blueprint, url_prefix='/servers')
+    app.register_blueprint(user_blueprint, url_prefix='/users')
 
     return app

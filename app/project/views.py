@@ -159,9 +159,12 @@ def register():
 @project.route('/set_active_project/')
 def set_active_project():
     project_id = request.args.get('project_id', type=int)
+    logger.debug('get {}'.format(url_for('.set_active_project', project_id=project_id)))
+
     p = Project.query.get(project_id)
 
-    current_user.active_project = p
-    db.session.commit()
+    if current_user in p.testers.all() or current_user in p.editors.all():
+        current_user.active_project = p
+        db.session.commit()
 
     return redirect(url_for('.project_list'))

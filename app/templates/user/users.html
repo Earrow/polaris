@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% import "_macros.html" as macros %}
+
+{% block head %}
+    {{ super() }}
+
+    <style type="text/css">
+        th { text-align:center; }
+        td { text-align:center; }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+        $(function() {
+            $('input[name="permission"]').change(function() {
+                if (this.value === 'editor')
+                    var check_val = 'editor';
+                else if (this.value === 'tester')
+                    var check_val = 'tester';
+
+                var data = {
+                    "check_val": check_val,
+                    "user_id": $(this).parent().attr('id'),
+                    "project_id": {{ project.id }}
+                };
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/users/change_permission',
+                    data: data,
+                    dataType: 'json',
+                    async:false,
+                    success: function(data) {},
+                    error: function(xhr, type) {}
+                });
+            });
+        });
+
+        function del() {
+            var msg = "确定将用户从此项目中移除吗？";
+            if (confirm(msg)==true){
+                return true;
+            }else{
+                return false;
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block page_content %}
+    {% if current_user in project.editors -%}
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">请输入用户信息：</h4>
+                    </div>
+                    <form id="form_data" class="form" method="POST">
+                        <div class="modal-body">
+                            {{ form.csrf_token }}
+                            {{ wtf.form_field(form.new_user_email) }}
+                            {{ wtf.form_field(form.new_user_permission) }}
+                        </div>
+                        <div class="modal-footer">
+                            {{ wtf.form_field(form.submit) }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <h4><a href="#" data-toggle="modal" data-target="#myModal"><span class="label label-primary">添加用户</span></a></h4>
+    {%- endif %}
+
+    <div class="tables">
+        <div class="bs-example widget-shadow" data-example-id="hoverable-table">
+            <h4>用户列表：</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>账号</th>
+                        <th>权限</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                {%- for user in users -%}
+                    <tr>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {%- if user in project.editors.all() -%}
+                                <form method="POST" id={{ user.id }}>
+                                    <input type="radio" name="permission" value="editor" checked />管理员&nbsp;&nbsp;
+                                    <input type="radio" name="permission" value="tester" />测试员
+                                </form>
+                            {%- else -%}
+                                <form method="POST" id={{ user.id }}>
+                                    <input type="radio" name="permission" value="editor" />管理员&nbsp;&nbsp;
+                                    <input type="radio" name="permission" value="tester" checked />测试员
+                                </form>
+                            {%- endif -%}
+                        </td>
+                        <td><a href={{ url_for("user.remove", user_id=user.id, project_id=project.id) }} onclick="javascript:return del()">移除</a></td>
+                    </tr>
+                {%- endfor -%}
+            </table>
+        </div>
+    </div>
+{% endblock %}

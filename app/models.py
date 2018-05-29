@@ -66,7 +66,7 @@ class RegistrationApplication(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-    state = db.Column(db.Integer, default=0)  # 0：未处理，1：批准，-1：拒绝
+    state = db.Column(db.Integer, default=0)  # 0：未处理，1：批准或用户被直接添加到项目，-1：拒绝
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
 
