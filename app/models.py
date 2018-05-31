@@ -240,6 +240,8 @@ class Task(db.Model):
     result_statistics = db.Column(db.Text)
     crontab = db.Column(db.String(64))
     scheduler_enable = db.Column(db.Boolean, default=False)
+    email_receivers = db.Column(db.Text)
+    email_notification_enable = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return '<Task {}>'.format(self.name)
@@ -298,13 +300,34 @@ class Manual(db.Model):
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
-        allowed_tags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code',
-                        'em', 'i', 'li', 'ol', 'pre', 'strong', 'ul',
-                        'h1', 'h2', 'h3', 'p']
-
-        # target.body_html = bleach.linkify(
-        #     bleach.clean(markdown(value, output_format='html'), tags=allowed_tags, strip=True))
         target.body_html = bleach.linkify(markdown(value, output_format='html'))
 
 
 db.event.listen(Manual.body, 'set', Manual.on_changed_body)
+
+
+class EmailTemplate(db.Model):
+    """邮件通知模板。"""
+    __tablename__ = 'email_templates'
+
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    body_html = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    @staticmethod
+    def insert_email_template():
+        import os
+        with open(os.path.join(os.path.split(os.path.realpath(__file__))[0], 'static', 'email_template.txt'),
+                  encoding='utf-8') as fp:
+            data = fp.read()
+            m = EmailTemplate(body=data)
+            db.session.add(m)
+            db.session.commit()
+
+    @staticmethod
+    def on_changed_body(target, value, oldvalue, initiator):
+        target.body_html = bleach.linkify(markdown(value, output_format='html'))
+
+
+db.event.listen(EmailTemplate.body, 'set', EmailTemplate.on_changed_body)

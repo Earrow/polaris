@@ -15,7 +15,9 @@ class TaskApplyForm(FlaskForm):
     result_statistics = TextAreaField('结果统计', id='result_statistics_content',
                                       render_kw={'placeholder': '结果统计命令请在此配置'})
     crontab = StringField('定时设置', render_kw={'placeholder': 'crontab (minute hour day month day_of_week)'})
-    scheduler_enable = BooleanField('启动定时执行')
+    scheduler_enable = BooleanField('启用定时执行')
+    email_receivers = StringField('邮件通知收件人地址', render_kw={'placeholder': '多个地址已;分隔'})
+    email_notification_enable = BooleanField('启用邮件通知')
     submit = SubmitField('提交')
 
     def __init__(self, project_id, **kwargs):

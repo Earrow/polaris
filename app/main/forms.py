@@ -9,3 +9,8 @@ from flask_pagedown.fields import PageDownField
 class ManualForm(FlaskForm):
     body = PageDownField('内容：', validators=[InputRequired()], render_kw=dict(rows=15))
     submit = SubmitField('提交')
+
+
+class EmailTemplateForm(FlaskForm):
+    body = PageDownField('内容：', validators=[InputRequired()], render_kw=dict(rows=15))
+    submit = SubmitField('提交')

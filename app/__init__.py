@@ -1,9 +1,11 @@
 # coding=utf-8
 
+import os
 import logging
 
-from flask_jenkins import Jenkins
 from flask import Flask
+from celery import Celery
+from flask_jenkins import Jenkins
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
@@ -28,10 +30,13 @@ pagedown = PageDown()
 
 
 def create_app(config_name):
+    global celery_app
+
     app = Flask(__name__)
     logger.debug('create app, using config: {}'.format(config_name))
     logger.debug('config content: {}'.format(config[config_name]))
     app.config.from_object(config[config_name])
+    celery_app = create_celery(app)
 
     login_manager.init_app(app)
     db.init_app(app)
@@ -59,3 +64,22 @@ def create_app(config_name):
     app.register_blueprint(user_blueprint, url_prefix='/users')
 
     return app
+
+
+def create_celery(app):
+    celery = Celery(
+        app.import_name,
+        broker=app.config['CELERY_BROKER_URL']
+    )
+    celery.conf.update(app.config)
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
+
+
+app = create_app(os.getenv('POLARIS_CONFIG') or 'default')

@@ -27,12 +27,6 @@
                             text: '测试结果统计',
                             left: 'center'
                          },
-                        itemStyle: {
-                            emphasis: {
-                                shadowBlur: 200,
-                                shadowColor: 'rgba(0, 0, 0, 0.5)'
-                            }
-                        },
                         tooltip : {
                             trigger: 'item',
                             formatter: "{b} : {c} ({d}%)"
@@ -44,11 +38,24 @@
                                 type: 'pie',
                                 radius: '55%',
                                 data:[
-                                    {value:{{ ret['tests'] }} - {{ ret['errors'] }} - {{ ret['failures'] }}, name:'成功'},
+                                    {value:{{ ret['tests'] }} - {{ ret['errors'] }} - {{ ret['failures'] }} - {{ ret['skip'] }}, name:'成功'},
                                     {value:{{ ret['failures'] }}, name:'失败'},
                                     {value:{{ ret['errors'] }}, name:'出错'},
                                     {value:{{ ret['skip'] }}, name:'跳过'}
-                                ]
+                                ],
+                                itemStyle: {
+                                    emphasis: {
+                                        shadowBlur: 200,
+                                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                    },
+                                    normal: {
+                                        label: {
+                                            show:true,
+                                            formatter:'{b} : {c} ({d}%)'
+                                        },
+                                        labelLine:{show:true}
+                                    }
+                                }
                             }
                         ]
                     };

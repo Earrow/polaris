@@ -21,6 +21,8 @@
         {{ wtf.form_field(form.result_statistics) }}
         {{ wtf.form_field(form.crontab) }}
         {{ wtf.form_field(form.scheduler_enable) }}
+        {{ wtf.form_field(form.email_receivers) }}
+        {{ wtf.form_field(form.email_notification_enable) }}
         {{ wtf.form_field(form.submit) }}
     {% else %}
         {{ wtf.form_field(form.name) }}
@@ -29,6 +31,8 @@
         {{ wtf.form_field(form.result_statistics, readonly='readonly') }}
         {{ wtf.form_field(form.crontab, readonly='readonly') }}
         {{ wtf.form_field(form.scheduler_enable, readonly='readonly') }}
+        {{ wtf.form_field(form.email_receivers, readonly='readonly') }}
+        {{ wtf.form_field(form.email_notification_enable, readonly='readonly') }}
     {% endif %}
 </form>
 {% endblock %}

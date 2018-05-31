@@ -111,7 +111,15 @@
                             </ul>
                         </li>
                         <li>
-							<a href="http://{{ config['JENKINS_HOST'] }}" target="_Blank" class="chart-nav"><i class="fa fa-bar-chart nav_icon"></i>后台Jenkins</a>
+							<a href="#"><i class="fa fa-bar-chart nav_icon"></i>后台管理<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level collapse">
+                                <li>
+                                    <a href="http://{{ config['JENKINS_HOST'] }}" target="_blank">Jenkins平台</a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('main.email_template_page') }}">邮件通知模板</a>
+                                </li>
+                            </ul>
 						</li>
                         {%- endif %}
                         <li>

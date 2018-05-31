@@ -43,7 +43,8 @@
 
             var state = 0;
             var data = {
-                "project_id": {{ project_id }}
+                "project_id": {{ project_id }},
+                "task_id": {{ task_id }}
             };
 
             $.ajax({
@@ -61,7 +62,7 @@
             if (state === 1)
                 location.reload();
 
-            setTimeout("fun()", 5000)
+            setTimeout("fun()", 2000)
         }
 
         setTimeout("fun()", 10);

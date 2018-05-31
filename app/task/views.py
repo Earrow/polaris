@@ -168,6 +168,8 @@ def task_info(task_id):
             t.info = form.info.data
             t.command = form.command.data
             t.result_statistics = form.result_statistics.data
+            t.email_receivers = form.email_receivers.data
+            t.email_notification_enable = form.email_notification_enable.data
 
             db.session.commit()
 
@@ -227,6 +229,8 @@ def task_info(task_id):
     form.result_statistics.data = t.result_statistics
     form.crontab.data = t.crontab
     form.scheduler_enable.data = t.scheduler_enable
+    form.email_receivers.data = t.email_receivers
+    form.email_notification_enable.data = t.email_notification_enable
 
     if current_user in p.editors:
         return render_template('task/task.html', form=form, can_edit=True)
@@ -261,7 +265,8 @@ def create():
 
             t = Task(name=task_name, nickname=form.name.data, info=form.info.data, command=form.command.data,
                      result_statistics=form.result_statistics.data, crontab=form.crontab.data,
-                     scheduler_enable=form.scheduler_enable.data, project=p)
+                     scheduler_enable=form.scheduler_enable.data, email_receivers=form.email_receivers.data,
+                     email_notification_enable=form.email_notification_enable.data, project=p)
             db.session.add(t)
             db.session.commit()
             logger.debug('{} created {}'.format(current_user, t))

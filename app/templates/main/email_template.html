@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block page_content %}
+    <h4><a href="{{ url_for('main.email_template_page_edit') }}"><span class="label label-primary">编辑</span></a></h4>
+    <br />
+
+    <div class="panel-info widget-shadow">
+        {{ template.body_html | safe }}
+    </div>
+{% endblock %}

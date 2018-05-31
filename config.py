@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+from datetime import timedelta
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -35,6 +36,22 @@ class DevelopmentConfig(Config):
     JENKINS_HOST = ''
     JENKINS_USERNAME = ''
     JENKINS_PASSWORD = ''
+
+    EMAIL_HOST = ''
+    EMAIL_SENDER = ''
+    EMAIL_SENDER_PASSWORD = ''
+
+    CELERY_BROKER_URL = 'redis://localhost:6379'
+    CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+    CELERY_REDIRECT_STDOUTS_LEVEL = 'info'
+    CELERY_TASK_SERIALIZER = 'pickle'
+    CELERY_ACCEPT_CONTENT = ['pickle']
+    CELERYBEAT_SCHEDULE = {
+                              'check_state': {
+                                  'task': 'app.celery_tasks.check_state',
+                                  'schedule': timedelta(seconds=60)
+                              }
+                          }
 
 
 class TestingConfig(Config):
