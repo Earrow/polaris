@@ -11,15 +11,17 @@ Polaris是一个集项目管理、测试任务管理、服务器管理及结果�
 Jenkins平台需安装PostBuildScript 2.7.0插件
 
 ## 体验使用
-进入项目目录，执行如下指令后，浏览器打开：http://127.0.0.1:5000 进入平台：
+进入项目目录，执行如下指令：
 ```
 >>> python3 manage.py shell
 >>> db.create_all()
 >>> Role.insert_roles()
 >>> Manual.insert_manual()
-
+>>> EmailTemplate.insert_email_template()
+>>>
 >>> python3 manage.py runserver
 ```
+再启动Celery后，浏览器打开：http://127.0.0.1:5000 进入平台：
 
 ## 概要介绍
 首页即项目管理页面，展示了项目上创建的所有项目，若需要查看、编辑或执行某个项目下的测试任务需先加入该项目然后将该项目设置为活动项目，当前活动项目的查看和更改显示在右上方。
