@@ -266,7 +266,7 @@ class Record(db.Model):
 
     def __repr__(self):
         return (f'<Record {self.id}, build_number {self.build_number}, version {self.version}, state {self.state}, '
-                f'result {self.result}, task {self.task_id}>, user {self.user_id}>')
+                f'result {self.result}, task {self.task_id}, user {self.user_id}>')
 
 
 class Result(db.Model):
@@ -283,8 +283,8 @@ class Result(db.Model):
     skip = db.Column(db.Integer, default=0)
 
     def __repr__(self):
-        return (f'<<Result {self.id}, status {self.status}, tests {self.tests}, errors {self.errors}, '
-                f'failures {self.failures}>, skip {self.skip}, record {self.record_id}>')
+        return (f'<Result {self.id}, status {self.status}, tests {self.tests}, errors {self.errors}, '
+                f'failures {self.failures}, skip {self.skip}, record {self.record_id}>')
 
 
 class Manual(db.Model):
