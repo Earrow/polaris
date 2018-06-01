@@ -28,13 +28,13 @@ class DevelopmentConfig(Config):
 
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
 
-    JENKINS_HOST = '127.0.0.1:8080'
-    JENKINS_USERNAME = 'admin'
-    JENKINS_PASSWORD = '230dc2fb5723c1a31b48f2459054b951'
+    JENKINS_HOST = ''
+    JENKINS_USERNAME = ''
+    JENKINS_PASSWORD = ''
 
-    EMAIL_HOST = 'smtp.qq.com'
-    EMAIL_SENDER = '377071769@qq.com'
-    EMAIL_SENDER_PASSWORD = 'kntmxbddaunvbhgc'
+    EMAIL_HOST = ''
+    EMAIL_SENDER = ''
+    EMAIL_SENDER_PASSWORD = ''
 
     CELERY_BROKER_URL = 'redis://localhost:6379'
     CELERY_RESULT_BACKEND = 'redis://localhost:6379'
