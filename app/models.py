@@ -266,7 +266,7 @@ class Record(db.Model):
 
     def __repr__(self):
         return (f'<Record {self.id}, build_number {self.build_number}, version {self.version}, state {self.state}, '
-                f'result {self.result_id}, task {self.task_id}>, user {self.user_id}>')
+                f'result {self.result}, task {self.task_id}>, user {self.user_id}>')
 
 
 class Result(db.Model):

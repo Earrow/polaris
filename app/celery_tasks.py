@@ -2,7 +2,6 @@
 
 import redis
 from flask import current_app
-from flask_login import current_user
 
 from . import db, jenkins, celery_app
 from .tools import gen_analysis_pic
@@ -57,6 +56,8 @@ def send_email(host, sender, pwd, receivers, subject, content, result=None, atta
         msg.attach(att)
 
         content = content.replace('${analysis_pic}', '<img src="cid:0" />')
+    else:
+        content = content.replace('${analysis_pic}', '')
 
     # 正文
     msg.attach(MIMEText(content, content_type, 'utf-8'))
@@ -98,11 +99,8 @@ def check_state():
                     db.session.commit()
 
                 if rcd.state == -2:
-                    try:
-                        rcd.state = 0
-                        db.session.commit()
-                    except jenkins.NotFoundException:
-                        pass
+                    rcd.state = 0
+                    db.session.commit()
 
                 # 查询记录是否已经执行完毕
                 if rcd.state == 0:
