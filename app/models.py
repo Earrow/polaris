@@ -1,7 +1,5 @@
 # coding=utf-8
 
-import logging
-
 from datetime import datetime
 
 from flask import current_app
@@ -11,8 +9,6 @@ from markdown import markdown
 import bleach
 
 from . import db, login_manager
-
-logger = logging.getLogger('polaris.models')
 
 
 class Permission:
@@ -69,6 +65,9 @@ class RegistrationApplication(db.Model):
     state = db.Column(db.Integer, default=0)  # 0：未处理，1：批准或用户被直接添加到项目，-1：拒绝
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
+    def __repr__(self):
+        return f'<RegistrationApplication {self.id}, user {self.user}, project {self.project}>'
+
 
 class ProjectApplication(db.Model):
     """项目申请。"""
@@ -80,6 +79,9 @@ class ProjectApplication(db.Model):
     state = db.Column(db.Integer, default=0)  # 0：未处理，1：批准，-1：拒绝
     showed = db.Column(db.Boolean, default=False)  # 申请被拒绝后在用户第一次访问项目列表时会显示拒绝信息
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<ProjectApplication {self.id}, user {self.user}, project {self.project}>'
 
 
 class User(UserMixin, db.Model):
@@ -108,7 +110,6 @@ class User(UserMixin, db.Model):
                 self.role = Role.query.filter_by(name='Administrator').first()
             else:
                 self.role = Role.query.filter_by(default=True).first()
-            logger.debug('create user {}, role as {}'.format(self, self.role))
 
     @property
     def password(self):
@@ -161,7 +162,7 @@ class User(UserMixin, db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return '<User {}>'.format(self.email)
+        return f'<User {self.id}, email {self.email}>'
 
 
 @login_manager.user_loader
@@ -193,7 +194,7 @@ class Server(db.Model):
     info = db.Column(db.Text)
 
     def __repr__(self):
-        return '<Server {}>'.format(self.host)
+        return f'<Server {self.id}, host {self.host}, info {self.info}>'
 
 
 class Project(db.Model):
@@ -216,11 +217,10 @@ class Project(db.Model):
         """添加新项目时，将其与平台管理员关联起来"""
         for u in User.query.all():
             if u.is_administrator():
-                logger.debug('create project {}, auto register the user {} to it'.format(value, u))
                 u.register(target, True)
 
     def __repr__(self):
-        return '<Project {}>'.format(self.name)
+        return f'<Project {self.id}, name {self.name}, info {self.info}, server {self.server_id}>'
 
 
 db.event.listen(Project.name, 'set', Project.on_created)
@@ -244,7 +244,10 @@ class Task(db.Model):
     email_notification_enable = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
-        return '<Task {}>'.format(self.name)
+        return (f'<Task {self.id}, name {self.name}, info {self.info}, command {self.command}, '
+                f'result_statistics {self.result_statistics}, crontab {self.crontab}, '
+                f'scheduler_enable {self.scheduler_enable}, email_receivers: {self.email_receivers}, '
+                f'email_notification_enable {self.email_notification_enable}, project {self.project_id}>')
 
 
 class Record(db.Model):
@@ -262,7 +265,8 @@ class Record(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
     def __repr__(self):
-        return '<Record of {}-{}-version {}>'.format(self.project, self.task, self.version)
+        return (f'<Record {self.id}, build_number {self.build_number}, version {self.version}, state {self.state}, '
+                f'result {self.result_id}, task {self.task_id}>, user {self.user_id}>')
 
 
 class Result(db.Model):
@@ -278,6 +282,10 @@ class Result(db.Model):
     failures = db.Column(db.Integer, default=0)
     skip = db.Column(db.Integer, default=0)
 
+    def __repr__(self):
+        return (f'<<Result {self.id}, status {self.status}, tests {self.tests}, errors {self.errors}, '
+                f'failures {self.failures}>, skip {self.skip}, record {self.record_id}>')
+
 
 class Manual(db.Model):
     """使用说明。"""
@@ -287,6 +295,9 @@ class Manual(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Manual {self.id}, body {self.body}>'
 
     @staticmethod
     def insert_manual():
@@ -314,6 +325,9 @@ class EmailTemplate(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<EmailTemplate {self.id}, body {self.body}>'
 
     @staticmethod
     def insert_email_template():

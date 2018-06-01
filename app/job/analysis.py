@@ -1,3 +1,8 @@
+"""
+deprecated.
+"""
+
+
 from lxml import etree
 
 from ..tools import NestDict
@@ -34,7 +39,3 @@ def nose_analysis(ret_file):
                     0]
 
     return ret
-
-
-if __name__ == '__main__':
-    print(nose_analysis('/home/hcliu/Documents/python_projects/polaris/app/job/1.xml'))

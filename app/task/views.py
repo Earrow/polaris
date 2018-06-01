@@ -1,18 +1,14 @@
 # encoding=utf-8
 
-import logging
-
 from apscheduler.triggers.cron import CronTrigger
 from flask import render_template, url_for, redirect, abort, flash, current_app, request
-from flask_login import current_user
+from flask_login import current_user, login_required
 from jenkins import JenkinsException
 
 from . import task
 from .. import db, scheduler, jenkins
 from .forms import TaskApplyForm, TaskEditForm
 from ..models import Project, Task, Record
-
-logger = logging.getLogger('polaris.task')
 
 
 def _create_job(name, info, command, result_statistics, host):
@@ -117,9 +113,9 @@ def _create_job(name, info, command, result_statistics, host):
 @task.route('/')
 def task_list():
     project_id = request.args.get('project_id', type=int)
-    logger.debug('get {}'.format(url_for('.task_list', project_id=project_id)))
-
     page = request.args.get('page', 1, type=int)
+    current_app.logger.debug('get {}'.format(url_for('.task_list', project_id=project_id, page=page)))
+
     pagination = Task.query.filter_by(project_id=project_id).paginate(page, per_page=current_app.config[
         'POLARIS_TASKS_PER_PAGE'], error_out=False)
     t = pagination.items
@@ -128,6 +124,7 @@ def task_list():
 
 
 @task.route('/<task_id>/', methods=['GET', 'POST'])
+@login_required
 def task_info(task_id):
     """编辑任务。"""
     t = Task.query.get(task_id)
@@ -138,7 +135,7 @@ def task_info(task_id):
         if current_user not in p.editors:
             abort(403)
 
-        logger.debug('post {}'.format(url_for('.task_info', task_id=task_id)))
+        current_app.logger.debug('post {}'.format(url_for('.task_info', task_id=task_id)))
 
         try:
             import xml.etree.ElementTree as ET
@@ -147,17 +144,17 @@ def task_info(task_id):
             root = ET.fromstring(config)
 
             if form.info.data != t.info:
-                logger.debug('info updated')
+                current_app.logger.debug('info updated')
 
                 root.find('description').text = form.info.data
 
             if form.command.data != t.command:
-                logger.debug('command updated')
+                current_app.logger.debug('command updated')
 
                 root.find('builders').find('hudson.tasks.Shell').find('command').text = form.command.data.replace('\r',
                                                                                                                   '')
             if form.result_statistics.data != t.result_statistics:
-                logger.debug('result_statistics updated')
+                current_app.logger.debug('result_statistics updated')
 
                 root.find('.//org.jenkinsci.plugins.postbuildscript.model.PostBuildStep//command').text = \
                     form.result_statistics.data.replace('\r', '')
@@ -175,7 +172,7 @@ def task_info(task_id):
 
             if form.scheduler_enable.data:
                 if form.crontab.data:
-                    logger.debug('edit trigger of <Task {}>'.format(form.name.data))
+                    current_app.logger.debug('edit trigger of <Task {}>'.format(form.name.data))
 
                     # 校验crontab格式
                     scheduler.add_job('temp_id', lambda: None, trigger=CronTrigger.from_crontab(form.crontab.data))
@@ -209,19 +206,21 @@ def task_info(task_id):
 
             db.session.commit()
         except ValueError as e:
-            logger.error('crontab wrong: {}'.format(e))
-            flash('crontab格式错误', 'danger')
-
             t.scheduler_enable = False
             db.session.commit()
+
+            current_app.logger.error('crontab wrong')
+            current_app.logger.exception(e)
+            flash('crontab格式错误', 'danger')
         except JenkinsException as e:
-            logger.error('jenkins edit job error: {}'.format(e))
+            current_app.logger.error('jenkins edit job error')
+            current_app.logger.exception(e)
             flash('内部错误', 'danger')
 
-        logger.debug('{} edited {}'.format(current_user, t))
+        current_app.logger.info(f'{current_user} edited {t}')
         return redirect(url_for('.task_list', project_id=t.project.id))
 
-    logger.debug('get {}'.format(url_for('.task_info', project_id=t.project.id, task_id=task_id)))
+    current_app.logger.debug('get {}'.format(url_for('.task_info', project_id=t.project.id, task_id=task_id)))
 
     form.name.data = t.nickname
     form.info.data = t.info
@@ -250,13 +249,13 @@ def create():
         abort(403)
 
     if form.validate_on_submit():
-        logger.debug('post {}'.format(url_for('.create', project_id=project_id)))
+        current_app.logger.debug('post {}'.format(url_for('.create', project_id=project_id)))
 
         task_name = f'{p.name}_{form.name.data}'
 
         try:
             jenkins._server.delete_job(task_name)
-            logger.warning(f'{task_name} already exist in jenkins, delete it')
+            current_app.logger.warning(f'{task_name} already exist in jenkins, delete it')
         except JenkinsException:
             pass
 
@@ -269,11 +268,11 @@ def create():
                      email_notification_enable=form.email_notification_enable.data, project=p)
             db.session.add(t)
             db.session.commit()
-            logger.debug('{} created {}'.format(current_user, t))
+            current_app.logger.debug('{} created the task {}'.format(current_user, t))
 
             if form.scheduler_enable.data:
                 if form.crontab.data:
-                    logger.debug('add trigger to <Task {}>'.format(t.name))
+                    current_app.logger.debug('add trigger to <Task {}>'.format(t.name))
 
                     import xml.etree.ElementTree as ET
 
@@ -295,13 +294,14 @@ def create():
                     t.scheduler_enable = False
                     db.session.commit()
         except ValueError as e:
-            logger.error('crontab wrong: {}'.format(e))
-            flash('crontab格式错误', 'danger')
-
             t.scheduler_enable = False
             db.session.commit()
+
+            current_app.logger.error('crontab wrong')
+            current_app.logger.exception(e)
+            flash('crontab格式错误', 'danger')
         except JenkinsException as e:
-            logger.error('jenkins create job error: {}'.format(e))
+            current_app.logger.error('jenkins create job error: {}'.format(e))
             flash('内部错误', 'danger')
 
             try:
@@ -312,7 +312,7 @@ def create():
 
         return redirect(url_for('.task_list', project_id=project_id))
 
-    logger.debug('get {}'.format(url_for('.create', project_id=project_id)))
+    current_app.logger.debug('get {}'.format(url_for('.create', project_id=project_id)))
     return render_template('task/task.html', form=form, can_edit=True)
 
 
@@ -331,7 +331,8 @@ def delete():
     try:
         jenkins._server.delete_job(t.name)
     except JenkinsException as e:
-        logger.warning('delete task {} got exception: {}'.format(t, e))
+        current_app.logger.warning('delete task {} error'.format(t))
+        current_app.logger.exception(e)
         flash('内部错误', 'danger')
 
     for record in t.records:

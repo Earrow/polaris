@@ -1,16 +1,12 @@
 # encoding=utf-8
 
-import logging
-
-from flask import request, url_for, render_template, jsonify, abort, redirect, flash
+from flask import request, url_for, render_template, jsonify, abort, redirect, flash, current_app
 from flask_login import current_user
 
 from . import user
 from .forms import AddUserForm
 from .. import db
 from ..models import User, Project, RegistrationApplication
-
-logger = logging.getLogger('polaris.user')
 
 
 @user.route('/', methods=['GET', 'POST'])
@@ -23,11 +19,11 @@ def user_list():
 
     form = AddUserForm()
     if form.validate_on_submit():
-        logger.debug('post {}'.format(url_for('.user_list', project_id=project_id)))
+        current_app.logger.debug('post {}'.format(url_for('.user_list', project_id=project_id)))
 
         email = form.new_user_email.data
         permission = form.new_user_permission.data
-        logger.debug(f'email: {email}, permission: {permission}')
+        current_app.logger.debug(f'email: {email}, permission: {permission}')
 
         u = User.query.filter_by(email=email).first()
         if u:
@@ -49,12 +45,12 @@ def user_list():
                 application.state = 1
 
             db.session.commit()
-            logger.debug(f'add {u} to {p}')
+            current_app.logger.debug(f'add {u} to {p}')
         else:
             flash('添加用户不存在', 'danger')
         return redirect(url_for('.user_list', project_id=project_id))
 
-    logger.debug('get {}'.format(url_for('.user_list', project_id=project_id)))
+    current_app.logger.debug('get {}'.format(url_for('.user_list', project_id=project_id)))
 
     users = [u for u in p.editors.all() + p.testers.all() if u.role.name != 'Administrator' and u != current_user]
     return render_template('user/users.html', users=users, project=p, form=form)
@@ -66,14 +62,14 @@ def change_permission():
     user_id = request.args.get('user_id', type=int)
     project_id = request.args.get('project_id', type=int)
     check_val = request.args.get('check_val', type=str)
-    logger.debug(
+    current_app.logger.debug(
         'get {}'.format(url_for('.change_permission', user_id=user_id, project_id=project_id, check_val=check_val)))
 
     u = User.query.get(user_id)
     p = Project.query.get(project_id)
 
     if current_user not in p.editors:
-        logger.warning(f'{current_user} change permission forbidden')
+        current_app.logger.warning(f'{current_user} change permission forbidden')
         abort(403)
 
     if check_val == 'editor':
@@ -94,14 +90,14 @@ def remove():
     """将用户从项目中移除。"""
     user_id = request.args.get('user_id', type=int)
     project_id = request.args.get('project_id', type=int)
-    logger.debug(
+    current_app.logger.debug(
         'get {}'.format(url_for('.remove', user_id=user_id, project_id=project_id)))
 
     u = User.query.get(user_id)
     p = Project.query.get(project_id)
 
     if current_user not in p.editors:
-        logger.warning(f'{current_user} remove user forbidden')
+        current_app.logger.warning(f'{current_user} remove user forbidden')
         abort(403)
 
     if u in p.testers.all():

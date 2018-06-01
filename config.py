@@ -12,20 +12,15 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
-    SCHEDULER_API_ENABLED = True
-    # 任务调度不再使用apscheduler，现在只用于crontab的校验
-    # SCHEDULER_JOBSTORES = {
-    #     'default': SQLAlchemyJobStore(url='sqlite:///' + os.path.join(basedir, 'jobs.sqlite'))
-    # }
-    # SCHEDULER_EXECUTORS = {
-    #     'default': {'type': 'threadpool', 'max_workers': 10}
-    # }
-
     POLARIS_ADMIN = os.environ.get('POLARIS_ADMIN') or 'earrow.liu@gmail.com'
     POLARIS_RECORDS_PER_PAGE = 20
     POLARIS_TASKS_PER_PAGE = 20
     POLARIS_PROJECTS_PER_PAGE = 20
     POLARIS_SERVERS_PER_PAGE = 10
+
+    @classmethod
+    def init_app(cls, app):
+        pass
 
 
 class DevelopmentConfig(Config):
@@ -33,13 +28,13 @@ class DevelopmentConfig(Config):
 
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
 
-    JENKINS_HOST = ''
-    JENKINS_USERNAME = ''
-    JENKINS_PASSWORD = ''
+    JENKINS_HOST = '127.0.0.1:8080'
+    JENKINS_USERNAME = 'admin'
+    JENKINS_PASSWORD = '230dc2fb5723c1a31b48f2459054b951'
 
-    EMAIL_HOST = ''
-    EMAIL_SENDER = ''
-    EMAIL_SENDER_PASSWORD = ''
+    EMAIL_HOST = 'smtp.qq.com'
+    EMAIL_SENDER = '377071769@qq.com'
+    EMAIL_SENDER_PASSWORD = 'kntmxbddaunvbhgc'
 
     CELERY_BROKER_URL = 'redis://localhost:6379'
     CELERY_RESULT_BACKEND = 'redis://localhost:6379'
@@ -49,9 +44,24 @@ class DevelopmentConfig(Config):
     CELERYBEAT_SCHEDULE = {
                               'check_state': {
                                   'task': 'app.celery_tasks.check_state',
-                                  'schedule': timedelta(seconds=60)
+                                  'schedule': timedelta(seconds=300)
                               }
                           }
+
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+
+        import logging
+        from flask.logging import default_handler
+
+        app.logger.setLevel(logging.DEBUG)
+        stream_handler = logging.StreamHandler()
+        formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(funcName)s()] %(message)s')
+        stream_handler.setFormatter(formatter)
+
+        app.logger.removeHandler(default_handler)
+        app.logger.addHandler(stream_handler)
 
 
 class TestingConfig(Config):

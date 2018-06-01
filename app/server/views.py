@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import urllib
-import logging
 
 import requests
 from flask import render_template, url_for, request, current_app, redirect, jsonify, flash
@@ -12,8 +11,6 @@ from . import server
 from .forms import ServerCreateForm, ServerEditForm
 from .. import db, jenkins
 from ..models import Server
-
-logger = logging.getLogger('polaris.server')
 
 
 def _add_credential(host, username, password):
@@ -52,7 +49,7 @@ def _add_credential(host, username, password):
 
 @server.route('/')
 def servers():
-    logger.debug('get {}'.format(url_for('.servers')))
+    current_app.logger.debug('get {}'.format(url_for('.servers')))
 
     page = request.args.get('page', 1, type=int)
     pagination = Server.query.paginate(page, per_page=current_app.config['POLARIS_SERVERS_PER_PAGE'], error_out=False)
@@ -66,7 +63,7 @@ def server_info(server_id):
     form = ServerEditForm()
 
     if form.validate_on_submit():
-        logger.debug('post {}'.format(url_for('.server_info', server_id=server_id)))
+        current_app.logger.debug('post {}'.format(url_for('.server_info', server_id=server_id)))
 
         try:
             s = Server.query.get(server_id)
@@ -77,20 +74,20 @@ def server_info(server_id):
             root = ET.fromstring(config)
 
             if form.username.data != s.username or form.password.data != s.password:
-                logger.debug('user updated')
-
                 credential_id = _add_credential(form.host.data, form.username.data, form.password.data)
                 root.find('launcher').find('credentialsId').text = credential_id
 
-            if form.workspace.data != s.workspace:
-                logger.debug('workspace updated')
+                current_app.logger.debug('user updated')
 
+            if form.workspace.data != s.workspace:
                 root.find('remoteFS').text = form.workspace.data
 
-            if form.info.data != s.info:
-                logger.debug('info updated')
+                current_app.logger.debug('workspace updated')
 
+            if form.info.data != s.info:
                 root.find('description').text = form.info.data
+
+                current_app.logger.debug('info updated')
 
             jenkins._server.reconfig_node(s.host, ET.tostring(root).decode('utf-8'))
 
@@ -102,14 +99,16 @@ def server_info(server_id):
             db.session.add(s)
             db.session.commit()
 
-            logger.debug('{} edited the server {}'.format(current_user, s))
+            current_app.logger.info('{} edited the server {}'.format(current_user, s))
         except JenkinsException as e:
-            logger.warning('jenkins edit node error: {}'.format(e))
+            current_app.logger.error('jenkins edit node error')
+            current_app.logger.exception(e)
             flash('内部错误', 'danger')
 
         return redirect(url_for('.servers'))
 
-    logger.debug('get {}'.format(url_for('.server_info', server_id=server_id)))
+    current_app.logger.debug('get {}'.format(url_for('.server_info', server_id=server_id)))
+
     s = Server.query.get(server_id)
     form.host.data = s.host
     form.username.data = s.username
@@ -126,11 +125,11 @@ def create():
     form = ServerCreateForm()
 
     if form.validate_on_submit():
-        logger.debug('post {}'.format(url_for('.create')))
+        current_app.logger.debug('post {}'.format(url_for('.create')))
 
         try:
             credential_id = _add_credential(form.host.data, form.username.data, form.password.data)
-            logger.debug(f'credential_id: {credential_id}')
+            current_app.logger.debug(f'credential_id: {credential_id}')
 
             if not jenkins._server.node_exists(form.host.data):
                 jenkins._server.create_node(form.host.data, numExecutors=5, nodeDescription=form.info.data,
@@ -143,24 +142,27 @@ def create():
                        workspace=form.workspace.data, info=form.info.data)
             db.session.add(s)
             db.session.commit()
-            logger.debug('add server {}'.format(s))
+
+            current_app.logger.debug(f'created server {s}')
         except requests.exceptions.HTTPError as e:
-            logger.error('add credential fail: {}'.format(e))
+            current_app.logger.error('jenkins add credential error')
+            current_app.logger.exception(e)
             flash('内部错误', 'danger')
         except JenkinsException as e:
-            logger.error('jenkins create node error: {}'.format(e))
+            current_app.logger.error('jenkins create node error')
+            current_app.logger.exception(e)
             flash('内部错误', 'danger')
 
         return redirect(url_for('.servers'))
 
-    logger.debug('get {}'.format(url_for('.create')))
+    current_app.logger.debug('get {}'.format(url_for('.create')))
     return render_template('server/server.html', form=form)
 
 
 @server.route('/check_state/')
 def check_state():
     """检查服务器在线状态。"""
-    s = Server.query.get(int(request.args.get('server_id')))
+    s = Server.query.get(request.args.get('server_id', type=int))
 
     try:
         node_info = jenkins._server.get_node_info(s.host)
@@ -173,17 +175,18 @@ def check_state():
                 node_info['monitorData']['hudson.node_monitors.DiskSpaceMonitor']['size'] / 1024 / 1024 / 1024, 2)
             db.session.commit()
     except JenkinsException as e:
-        logger.error('jenkins check node state error: {}'.format(e))
+        current_app.logger.error('jenkins check node state error')
+        current_app.logger.exception(e)
 
     try:
         if node_info['offline']:
-            logger.debug('{} is offline'.format(s))
+            current_app.logger.debug('{} is offline'.format(s))
             return jsonify(state=0, os='', disk_space='')
         else:
-            logger.debug('{} is online'.format(s))
+            current_app.logger.debug('{} is online'.format(s))
             return jsonify(state=1, os=os, disk_space=disk_space)
     except NotFoundException:
-        logger.warning('{} not found'.format(s))
+        current_app.logger.warning(f'server {s} not found')
         return jsonify(state=-1, os='', disk_space='')
 
 
@@ -196,7 +199,8 @@ def enable():
     try:
         jenkins._server.enable_node(s.host)
     except JenkinsException as e:
-        logger.warning('jenkins enable node {} error: {}'.format(s, e))
+        current_app.logger.warning(f'jenkins enable node {s} error')
+        current_app.logger.exception(e)
         flash('内部错误', 'danger')
 
     return redirect(url_for('.servers'))
@@ -212,11 +216,12 @@ def delete():
     try:
         jenkins._server.delete_node(s.host)
     except JenkinsException as e:
-        logger.warning('jenkins delete node {} error: {}'.format(s, e))
+        current_app.logger.error('jenkins delete node {} error'.format(s))
+        current_app.logger.exception(e)
         flash('内部错误', 'danger')
 
     db.session.delete(s)
     db.session.commit()
-    logger.debug(f'{current_user} delete the server {s}')
+    current_app.logger.info(f'{current_user} deleted the server {s}')
 
     return redirect(url_for('.servers'))

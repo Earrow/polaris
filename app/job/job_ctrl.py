@@ -1,5 +1,9 @@
 # coding=utf-8
 
+"""
+deprecated.
+"""
+
 import pickle
 from threading import Thread
 from datetime import datetime

@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import os
-import logging
 
 from flask import Flask
 from celery import Celery
@@ -13,8 +12,6 @@ from flask_apscheduler import APScheduler
 from flask_pagedown import PageDown
 
 from config import config
-
-logger = logging.getLogger('polaris.app')
 
 login_manager = LoginManager()
 login_manager.session_protection = 'basic'
@@ -33,9 +30,9 @@ def create_app(config_name):
     global celery_app
 
     app = Flask(__name__)
-    logger.debug('create app, using config: {}'.format(config_name))
-    logger.debug('config content: {}'.format(config[config_name]))
     app.config.from_object(config[config_name])
+    config[config_name].init_app(app)
+
     celery_app = create_celery(app)
 
     login_manager.init_app(app)
