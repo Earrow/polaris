@@ -111,18 +111,16 @@ def check_state():
                         test_result = Result(record=rcd, status=0 if build_info['result'] == 'SUCCESS' else -1,
                                              cmd_line=console_output, tests=0, errors=0, failures=0, skip=0)
 
-                        tests = f'result:tests:{rcd.project.name}:{rcd.task.nickname}'
-                        errors = f'result:errors:{rcd.project.name}:{rcd.task.nickname}'
-                        failures = f'result:failures:{rcd.project.name}:{rcd.task.nickname}'
-                        skip = f'result:skip:{rcd.project.name}:{rcd.task.nickname}'
+                        tests = r.lpop(f'result:tests:{rcd.project.name}:{rcd.task.nickname}')
+                        errors = r.lpop(f'result:errors:{rcd.project.name}:{rcd.task.nickname}')
+                        failures = r.lpop(f'result:failures:{rcd.project.name}:{rcd.task.nickname}')
+                        skip = r.lpop(f'result:skip:{rcd.project.name}:{rcd.task.nickname}')
 
-                        if r.exists(tests):
-                            test_result.tests += int(r.get(tests))
-                            test_result.errors += int(r.get(errors))
-                            test_result.failures += int(r.get(failures))
-                            test_result.skip += int(r.get(skip))
-
-                            r.delete(tests, errors, failures, skip)
+                        if tests:
+                            test_result.tests += int(tests)
+                            test_result.errors += int(errors)
+                            test_result.failures += int(failures)
+                            test_result.skip += int(skip)
 
                         db.session.add(test_result)
 
