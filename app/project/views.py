@@ -53,7 +53,7 @@ def project_info(project_id):
             current_app.logger.info(f'user {current_user} edited the project {p}')
             return redirect(url_for('.project_list'))
         else:
-            current_app.logger.warning(f'user {current_user} is forbided to edit the project {p}')
+            current_app.logger.warning(f'user {current_user} is forbade to edit the project {p}')
             abort(403)
 
     current_app.logger.debug('get {}'.format(url_for('.project_info', project_id=project_id)))
@@ -114,7 +114,7 @@ def delete():
 
         current_app.logger.info(f'user {current_user} deleted the project {p}')
     else:
-        current_app.logger.warning(f'user {current_user} is forbided to delete the project {p}')
+        current_app.logger.warning(f'user {current_user} is forbade to delete the project {p}')
         abort(403)
 
     return redirect(url_for('.project_list'))

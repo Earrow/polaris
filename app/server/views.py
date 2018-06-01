@@ -215,13 +215,13 @@ def delete():
 
     try:
         jenkins._server.delete_node(s.host)
+
+        db.session.delete(s)
+        db.session.commit()
+        current_app.logger.info(f'{current_user} deleted the server {s}')
     except JenkinsException as e:
         current_app.logger.error('jenkins delete node {} error'.format(s))
         current_app.logger.exception(e)
         flash('内部错误', 'danger')
-
-    db.session.delete(s)
-    db.session.commit()
-    current_app.logger.info(f'{current_user} deleted the server {s}')
 
     return redirect(url_for('.servers'))

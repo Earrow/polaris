@@ -101,13 +101,10 @@ def _create_job(name, info, command, result_statistics, host):
 
     project.append(ET.Element('buildWrappers'))
 
-    try:
-        config = ET.tostring(project).decode('utf-8')
-        jenkins._server.create_job(name, config)
+    config = ET.tostring(project).decode('utf-8')
+    jenkins._server.create_job(name, config)
 
-        return config
-    except JenkinsException:
-        raise
+    return config
 
 
 @task.route('/')
@@ -133,6 +130,7 @@ def task_info(task_id):
 
     if form.validate_on_submit():
         if current_user not in p.editors:
+            current_app.logger.warning(f'user {current_user} is forbade to edit the task {t}')
             abort(403)
 
         current_app.logger.debug('post {}'.format(url_for('.task_info', task_id=task_id)))
@@ -204,6 +202,7 @@ def task_info(task_id):
                 t.crontab = form.crontab.data
                 t.scheduler_enable = form.scheduler_enable.data
 
+            current_app.logger.info(f'{current_user} edited {t}')
             db.session.commit()
         except ValueError as e:
             t.scheduler_enable = False
@@ -217,7 +216,6 @@ def task_info(task_id):
             current_app.logger.exception(e)
             flash('内部错误', 'danger')
 
-        current_app.logger.info(f'{current_user} edited {t}')
         return redirect(url_for('.task_list', project_id=t.project.id))
 
     current_app.logger.debug('get {}'.format(url_for('.task_info', project_id=t.project.id, task_id=task_id)))
@@ -246,6 +244,7 @@ def create():
     form = TaskApplyForm(project_id)
 
     if current_user not in p.editors:
+        current_app.logger.warning(f'user {current_user} is forbade to create task')
         abort(403)
 
     if form.validate_on_submit():
@@ -326,19 +325,21 @@ def delete():
     p = Project.query.get(project_id)
 
     if current_user not in p.editors:
+        current_app.logger.warning(f'user {current_user} is forbade to delete the task {t}')
         abort(403)
 
     try:
         jenkins._server.delete_job(t.name)
+
+        for record in t.records:
+            db.session.delete(record)
+
+        db.session.delete(t)
+        db.session.commit()
     except JenkinsException as e:
         current_app.logger.warning('delete task {} error'.format(t))
         current_app.logger.exception(e)
         flash('内部错误', 'danger')
-
-    for record in t.records:
-        db.session.delete(record)
-    db.session.delete(t)
-    db.session.commit()
 
     return redirect(url_for('.task_list', project_id=project_id))
 

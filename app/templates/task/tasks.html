@@ -9,7 +9,7 @@
             var msg = "确定删除该任务吗？";
             if (confirm(msg)==true){
                 return true;
-            }else{
+            } else {
                 return false;
             }
         }
@@ -42,16 +42,16 @@
                 if (state === "no_permission")
                     alert('无权限，请先加入该项目');
                 else {
-                    window.location.href='/records/?project_id=' + {{ project.id }} + '&task_id=' + task_id;
-
-                    if (state === "no_permission")
-                        alert('无权限，请先加入该项目');
-                    else if (state === "timeout")
-                        alert('服务器连接离线，请检查服务器状态，恢复连接后任务会自动执行');
+                    if (state === "timeout")
+                        alert('测试服务器离线，请检查服务器状态，恢复连接后任务会自动执行');
                     else if (state === "wait")
-                        alert('由于服务器连接问题任务暂时无法执行，请稍后再试');
+                        alert('由于测试服务器连接问题任务暂时无法执行，请稍后再试');
                     else if (state === "busy")
                         alert('当前任务正在执行中或等待执行，请稍后再试');
+                    else if (state === "j_error")
+                        alert('内部错误，请稍后再试');
+                    else if (state === "success")
+                        window.location.href='/records/?project_id=' + {{ project.id }} + '&task_id=' + task_id;
                 }
             }
         }
@@ -84,7 +84,7 @@
                         <td><a href={{ url_for('task.task_info', task_id=task.id) }}>{{ task.nickname }}</a></td>
                         <td><input id="version" name={{ task.id }} type="text" style="width:100%;height:100%" /></td>
                         <td>
-                            <a href="#" onclick="fun({{ task.id }})" style="padding:0.1px;width:50%">执行</a>&nbsp&nbsp
+                            <a href="javascript:void(0)" onclick="fun({{ task.id }})" style="padding:0.1px;width:50%">执行</a>&nbsp&nbsp
                             <a href={{ url_for("task.analysis", task_id=task.id) }}>统计</a>&nbsp&nbsp
                             <a href={{ url_for("task.delete", task_id=task.id) }} onclick="javascript:return del()">删除</a>
                         </td>
