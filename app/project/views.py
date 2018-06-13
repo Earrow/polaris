@@ -2,10 +2,11 @@
 
 from flask import render_template, url_for, redirect, flash, request, current_app, abort
 from flask_login import current_user, login_required
+from jenkins import JenkinsException
 
 from . import project
 from .forms import ProjectApplyForm, ProjectEditForm
-from .. import db
+from .. import db, jenkins
 from ..models import Project, RegistrationApplication, ProjectApplication, Server
 
 
@@ -44,13 +45,31 @@ def project_info(project_id):
 
         # 校验当前用户是否有修改项目权限
         if current_user in p.editors:
-            p.name = form.name.data
-            p.info = form.info.data
-            p.server = Server.query.get(form.server_id.data)
-            db.session.add(p)
-            db.session.commit()
+            try:
+                server = Server.query.get(form.server_id.data)
+                if p.server != server:
+                    # 修改jenkins上任务的测试服务器
+                    import xml.etree.ElementTree as ET
 
-            current_app.logger.info(f'user {current_user} edited the project {p}')
+                    for task in p.tasks:
+                        config = jenkins._server.get_job_config(task.name)
+                        root = ET.fromstring(config)
+
+                        root.find('assignedNode').text = server.host
+                        jenkins._server.reconfig_job(task.name, ET.tostring(root).decode('utf-8'))
+
+                p.name = form.name.data
+                p.info = form.info.data
+                p.server = server
+                db.session.add(p)
+                db.session.commit()
+
+                current_app.logger.info(f'user {current_user} edited the project {p}')
+            except JenkinsException as e:
+                current_app.logger.error('jenkins edit job error')
+                current_app.logger.exception(e)
+                flash('内部错误', 'danger')
+
             return redirect(url_for('.project_list'))
         else:
             current_app.logger.warning(f'user {current_user} is forbade to edit the project {p}')

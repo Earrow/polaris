@@ -174,20 +174,18 @@ def check_state():
             disk_space = round(
                 node_info['monitorData']['hudson.node_monitors.DiskSpaceMonitor']['size'] / 1024 / 1024 / 1024, 2)
             db.session.commit()
-    except JenkinsException as e:
-        current_app.logger.error('jenkins check node state error')
-        current_app.logger.exception(e)
 
-    try:
-        if node_info['offline']:
-            current_app.logger.debug('{} is offline'.format(s))
-            return jsonify(state=0, os='', disk_space='')
-        else:
             current_app.logger.debug('{} is online'.format(s))
             return jsonify(state=1, os=os, disk_space=disk_space)
+        else:
+            current_app.logger.debug('{} is offline'.format(s))
+            return jsonify(state=0, os='', disk_space='')
     except NotFoundException:
         current_app.logger.warning(f'server {s} not found')
         return jsonify(state=-1, os='', disk_space='')
+    except JenkinsException as e:
+        current_app.logger.error('jenkins check node state error')
+        current_app.logger.exception(e)
 
 
 @server.route('/enable/')
@@ -198,6 +196,9 @@ def enable():
     s = Server.query.get(server_id)
     try:
         jenkins._server.enable_node(s.host)
+    except NotFoundException:
+        # 平台上配置的服务器不在jenkins时会出现此错误
+        pass
     except JenkinsException as e:
         current_app.logger.warning(f'jenkins enable node {s} error')
         current_app.logger.exception(e)
@@ -212,12 +213,28 @@ def delete():
     """删除服务器。"""
     server_id = request.args.get('server_id', type=int)
     s = Server.query.get(server_id)
+    current_app.logger.debug('get {}'.format(url_for('.delete')))
 
     try:
         jenkins._server.delete_node(s.host)
 
+        projects_name = ', '.join([project.name for project in s.projects])
+
         db.session.delete(s)
         db.session.commit()
+
+        if projects_name:
+            flash(f'请重新配置{projects_name}项目的测试服务器', 'warning')
+        current_app.logger.info(f'{current_user} deleted the server {s}')
+    except NotFoundException:
+        # 平台上配置的服务器不在jenkins时会出现此错误
+        projects_name = ', '.join([project.name for project in s.projects])
+
+        db.session.delete(s)
+        db.session.commit()
+
+        if projects_name:
+            flash(f'请重新配置{projects_name}项目的测试服务器', 'warning')
         current_app.logger.info(f'{current_user} deleted the server {s}')
     except JenkinsException as e:
         current_app.logger.error('jenkins delete node {} error'.format(s))
@@ -225,3 +242,14 @@ def delete():
         flash('内部错误', 'danger')
 
     return redirect(url_for('.servers'))
+
+
+@server.route('/get_projects_name/')
+@login_required
+def get_projects_name():
+    """获取使用某个服务器的项目名。"""
+    server_id = request.args.get('server_id', type=int)
+    s = Server.query.get(server_id)
+    current_app.logger.debug('get {}'.format(url_for('.get_projects_name', server_id=server_id)))
+
+    return jsonify(projects_name=', '.join([project.name for project in s.projects]))

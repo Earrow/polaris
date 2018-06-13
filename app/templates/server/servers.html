@@ -14,8 +14,29 @@
     {{ super() }}
 
     <script>
-        function del() {
-            var msg = "确定删除该服务器吗？";
+        function del(server_id) {
+            var data = {
+                "server_id": server_id
+            };
+            var projects_name = "";
+
+            $.ajax({
+                type: 'GET',
+                url: '{{ url_for("server.get_projects_name") }}',
+                dataType: 'json',
+                data: data,
+                async:false,
+                success: function(data) {
+                    projects_name = data.projects_name
+                },
+                error: function(xhr, type) {}
+            });
+
+            if (projects_name !== "")
+                var msg = projects_name + "项目使用了该服务器，确定删除吗？";
+            else
+                var msg = "确定删除该服务器吗？";
+
             if (confirm(msg)==true){
                 return true;
             }else{
@@ -104,7 +125,7 @@
                         <td>
                             <a href={{ url_for("server.server_info", server_id=server.id) }}>配置</a>&nbsp&nbsp
                             <a href={{ url_for("server.enable", server_id=server.id) }}>连接</a>&nbsp&nbsp
-                            <a href={{ url_for("server.delete", server_id=server.id) }} onclick="javascript:return del()">删除</a>
+                            <a href={{ url_for("server.delete", server_id=server.id) }} onclick="javascript:return del({{ server.id }})">删除</a>
                         </td>
                     </tr>
                 {%- endfor %}
