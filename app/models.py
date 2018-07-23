@@ -242,12 +242,19 @@ class Task(db.Model):
     scheduler_enable = db.Column(db.Boolean, default=False)
     email_receivers = db.Column(db.Text)
     email_notification_enable = db.Column(db.Boolean, default=False)
+    email_body = db.Column(db.Text)  # Markdown格式模板
+    email_body_html = db.Column(db.Text)  # HTML格式模板
+    email_attachments = db.Column(db.Text)
 
     def __repr__(self):
-        return (f'<Task {self.id}, name {self.name}, info {self.info}, command {self.command}, '
-                f'result_statistics {self.result_statistics}, crontab {self.crontab}, '
-                f'scheduler_enable {self.scheduler_enable}, email_receivers: {self.email_receivers}, '
-                f'email_notification_enable {self.email_notification_enable}, project {self.project_id}>')
+        return f'<Task {self.id}, name {self.name}, info {self.info}, project {self.project_id}>'
+
+    @staticmethod
+    def on_changed_email_body(target, value, oldvalue, initiator):
+        target.email_body_html = bleach.linkify(markdown(value, output_format='html'))
+
+
+db.event.listen(Task.email_body, 'set', Task.on_changed_email_body)
 
 
 class Record(db.Model):

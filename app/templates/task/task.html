@@ -4,10 +4,21 @@
 {% block head %}
     {{ super() }}
 
+    {{ pagedown.include_pagedown() }}
     <style type="text/css">
         #command_content { height: 200px; }
         #result_statistics_content { height: 200px; }
     </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+    $(document).ready(function(){
+        $('[data-toggle="popover"]').popover();
+    });
+    </script>
 {% endblock %}
 
 {% block page_content %}
@@ -19,9 +30,15 @@
         {{ wtf.form_field(form.info) }}
         {{ wtf.form_field(form.command) }}
         {{ wtf.form_field(form.result_statistics) }}
+        <hr />
         {{ wtf.form_field(form.crontab) }}
         {{ wtf.form_field(form.scheduler_enable) }}
+        <hr />
         {{ wtf.form_field(form.email_receivers) }}
+        {{ wtf.form_field(form.email_body) }}
+        <button type="button" class="btn btn-info" title="内置环境变量" data-toggle="popover" data-trigger="focus" data-html="true"
+           data-content="${analysis_pic}：结果统计图表<br />${tests}：用例总数<br />${pass}：用例通过数<br />${failures}：用例失败数<br />${errors}：用例出错数<br />${skip}：用例跳过数">环境变量说明</button>
+        {{ wtf.form_field(form.email_attachments) }}
         {{ wtf.form_field(form.email_notification_enable) }}
         {{ wtf.form_field(form.submit) }}
     {% else %}
@@ -29,9 +46,15 @@
         {{ wtf.form_field(form.info, readonly='readonly') }}
         {{ wtf.form_field(form.command, readonly='readonly') }}
         {{ wtf.form_field(form.result_statistics, readonly='readonly') }}
+        <hr />
         {{ wtf.form_field(form.crontab, readonly='readonly') }}
         {{ wtf.form_field(form.scheduler_enable, readonly='readonly') }}
+        <hr />
         {{ wtf.form_field(form.email_receivers, readonly='readonly') }}
+        {{ wtf.form_field(form.email_body, readonly='readonly') }}
+        <button type="button" class="btn btn-info" title="内置环境变量" data-toggle="popover" data-trigger="focus" data-html="true"
+           data-content="${analysis_pic}：结果统计图表<br />${tests}：用例总数<br />${pass}：用例通过数<br />${failures}：用例失败数<br />${errors}：用例出错数<br />${skip}：用例跳过数">环境变量说明</button>
+        {{ wtf.form_field(form.email_attachments, readonly='readonly') }}
         {{ wtf.form_field(form.email_notification_enable, readonly='readonly') }}
     {% endif %}
 </form>

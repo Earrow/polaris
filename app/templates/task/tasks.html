@@ -4,6 +4,15 @@
 {% block head %}
     {{ super() }}
 
+    <style type="text/css">
+        th { text-align:center; }
+        td { text-align:center; }
+    </style>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
     <script>
         function del() {
             var msg = "确定删除该任务吗？";
@@ -56,11 +65,6 @@
             }
         }
     </script>
-
-    <style type="text/css">
-        th { text-align:center; }
-        td { text-align:center; }
-    </style>
 {% endblock %}
 
 {% block page_content %}

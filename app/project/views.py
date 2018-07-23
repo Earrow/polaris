@@ -113,6 +113,7 @@ def delete():
                     break
 
         for task in p.tasks:
+            jenkins._server.delete_job(task.name)
             db.session.delete(task)
             current_app.logger.debug(f'deleted task {task}')
 

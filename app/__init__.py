@@ -10,6 +10,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bootstrap import Bootstrap
 from flask_apscheduler import APScheduler
 from flask_pagedown import PageDown
+from flask_migrate import Migrate
 
 from config import config
 
@@ -41,6 +42,7 @@ def create_app(config_name):
     scheduler.init_app(app)
     jenkins.init_app(app)
     pagedown.init_app(app)
+    migrate = Migrate(app, db)
 
     from .project import project as project_blueprint
     from .auth import auth as auth_blueprint

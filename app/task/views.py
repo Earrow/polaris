@@ -63,40 +63,40 @@ def _create_job(name, info, command, result_statistics, host):
 
     publishers = ET.Element('publishers')
     # 结果统计
-    if result_statistics is not None and result_statistics.strip() != '':
-        post_build_script = ET.Element('org.jenkinsci.plugins.postbuildscript.PostBuildScript',
-                                       {'plugin': 'postbuildscript@2.7.0'})
-        config = ET.Element('config')
-        build_steps = ET.Element('buildSteps')
-        build_step = ET.Element('org.jenkinsci.plugins.postbuildscript.model.PostBuildStep')
-        results = ET.Element('results')
-        result_success = ET.Element('string')
-        result_success.text = 'SUCCESS'
-        result_failure = ET.Element('string')
-        result_failure.text = 'FAILURE'
-        role = ET.Element('role')
-        role.text = 'BOTH'
-        build_steps_sub = ET.Element('buildSteps')
-        shell = ET.Element('hudson.tasks.Shell')
-        command = ET.Element('command')
-        command.text = result_statistics.replace('\r', '')
-        mark_build_unstable = ET.Element('markBuildUnstable')
-        mark_build_unstable.text = 'false'
+    post_build_script = ET.Element('org.jenkinsci.plugins.postbuildscript.PostBuildScript',
+                                   {'plugin': 'postbuildscript@2.7.0'})
+    config = ET.Element('config')
+    build_steps = ET.Element('buildSteps')
+    build_step = ET.Element('org.jenkinsci.plugins.postbuildscript.model.PostBuildStep')
+    results = ET.Element('results')
+    result_success = ET.Element('string')
+    result_success.text = 'SUCCESS'
+    result_failure = ET.Element('string')
+    result_failure.text = 'FAILURE'
+    role = ET.Element('role')
+    role.text = 'BOTH'
+    build_steps_sub = ET.Element('buildSteps')
+    shell = ET.Element('hudson.tasks.Shell')
+    command = ET.Element('command')
+    command.text = result_statistics.replace('\r', '')
+    mark_build_unstable = ET.Element('markBuildUnstable')
+    mark_build_unstable.text = 'false'
 
-        shell.append(command)
-        build_steps_sub.append(shell)
-        results.append(result_failure)
-        results.append(result_success)
-        build_step.append(results)
-        build_step.append(role)
-        build_step.append(build_steps_sub)
-        build_steps.append(build_step)
-        config.append(ET.Element('scriptFiles'))
-        config.append(ET.Element('groovyScripts'))
-        config.append(build_steps)
-        config.append(mark_build_unstable)
-        post_build_script.append(config)
-        publishers.append(post_build_script)
+    shell.append(command)
+    build_steps_sub.append(shell)
+    results.append(result_failure)
+    results.append(result_success)
+    build_step.append(results)
+    build_step.append(role)
+    build_step.append(build_steps_sub)
+    build_steps.append(build_step)
+    config.append(ET.Element('scriptFiles'))
+    config.append(ET.Element('groovyScripts'))
+    config.append(build_steps)
+    config.append(mark_build_unstable)
+    post_build_script.append(config)
+    publishers.append(post_build_script)
+
     project.append(publishers)
 
     project.append(ET.Element('buildWrappers'))
@@ -164,6 +164,8 @@ def task_info(task_id):
             t.command = form.command.data
             t.result_statistics = form.result_statistics.data
             t.email_receivers = form.email_receivers.data
+            t.email_body = form.email_body.data
+            t.email_attachments = form.email_attachments.data
             t.email_notification_enable = form.email_notification_enable.data
 
             db.session.commit()
@@ -227,6 +229,8 @@ def task_info(task_id):
     form.crontab.data = t.crontab
     form.scheduler_enable.data = t.scheduler_enable
     form.email_receivers.data = t.email_receivers
+    form.email_body.data = t.email_body
+    form.email_attachments.data = t.email_attachments
     form.email_notification_enable.data = t.email_notification_enable
 
     if current_user in p.editors:
@@ -264,10 +268,11 @@ def create():
             t = Task(name=task_name, nickname=form.name.data, info=form.info.data, command=form.command.data,
                      result_statistics=form.result_statistics.data, crontab=form.crontab.data,
                      scheduler_enable=form.scheduler_enable.data, email_receivers=form.email_receivers.data,
+                     email_body=form.email_body.data, email_attachments=form.email_attachments.data,
                      email_notification_enable=form.email_notification_enable.data, project=p)
             db.session.add(t)
             db.session.commit()
-            current_app.logger.debug('{} created the task {}'.format(current_user, t))
+            current_app.logger.info('{} created the task {}'.format(current_user, t))
 
             if form.scheduler_enable.data:
                 if form.crontab.data:

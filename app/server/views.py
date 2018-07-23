@@ -186,6 +186,7 @@ def check_state():
     except JenkinsException as e:
         current_app.logger.error('jenkins check node state error')
         current_app.logger.exception(e)
+        return jsonify(state=0, os='', disk_space='')
 
 
 @server.route('/enable/')

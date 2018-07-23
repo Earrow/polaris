@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from flask import render_template, redirect, url_for, jsonify, request, current_app
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from . import admin
 from .. import db
@@ -25,7 +25,7 @@ def create_project():
         db.session.add(p)
         db.session.commit()
 
-        current_app.logger.info(f'created {p}')
+        current_app.logger.info(f'{current_user} created {p}')
         return redirect(url_for('project.project_list'))
 
     current_app.logger.debug('get {}'.format(url_for('.create_project')))

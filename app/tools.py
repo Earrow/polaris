@@ -7,7 +7,7 @@ class NestDict(dict):
         return value
 
 
-def get_sftp_file(host, username, password, path):
+def get_sftp_file(host, username, password, path, mode='r'):
     """读取sftp文件，存入临时文件中，支持with as协议，退出后自动删除。"""
     import paramiko
     import tempfile
@@ -24,7 +24,7 @@ def get_sftp_file(host, username, password, path):
 
     class C:
         def __enter__(self):
-            self.f = open(f_path)
+            self.f = open(f_path, mode)
             return self.f
 
         def __exit__(self, exc_type, exc_val, exc_tb):
@@ -36,6 +36,9 @@ def get_sftp_file(host, username, password, path):
 
 def gen_analysis_pic(failure_count, success_count, skip_count, error_count):
     from io import BytesIO
+    import matplotlib
+    matplotlib.use('Agg')
+
     from matplotlib import pyplot as plt
 
     plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -46,22 +49,22 @@ def gen_analysis_pic(failure_count, success_count, skip_count, error_count):
     colors = []
     explode = []
     if failure_count:
-        labels.append('失败')
+        labels.append('failures')
         sizes.append(failure_count)
         colors.append('red')
         explode.append(0)
     if success_count:
-        labels.append('成功')
+        labels.append('pass')
         sizes.append(success_count)
         colors.append('yellowgreen')
         explode.append(0)
     if skip_count:
-        labels.append('跳过')
+        labels.append('skip')
         sizes.append(skip_count)
         colors.append('lightskyblue')
         explode.append(0)
     if error_count:
-        labels.append('出错')
+        labels.append('errors')
         sizes.append(error_count)
         colors.append('yellow')
         explode.append(0)

@@ -41,7 +41,7 @@ def send_email(host, sender, pwd, receivers, subject, content, result=None, atta
     from email.mime.multipart import MIMEMultipart
 
     msg = MIMEMultipart()
-    msg['From'] = sender
+    msg['From'] = f'Polaris 通知 <{sender}>'
     msg['To'] = ', '.join(receivers)
     msg['Subject'] = Header(subject, 'utf-8')
 
@@ -56,8 +56,11 @@ def send_email(host, sender, pwd, receivers, subject, content, result=None, atta
         msg.attach(att)
 
         content = content.replace('${analysis_pic}', '<img src="cid:0" />')
-    else:
-        content = content.replace('${analysis_pic}', '')
+        content = content.replace('${tests}', f'{result[0]}')
+        content = content.replace('${pass}', f'{result[0] - result[1] - result[2] - result[3]}')
+        content = content.replace('${failures}', f'{result[2]}')
+        content = content.replace('${errors}', f'{result[1]}')
+        content = content.replace('${skip}', f'{result[3]}')
 
     # 正文
     msg.attach(MIMEText(content, content_type, 'utf-8'))
@@ -137,7 +140,7 @@ def check_state():
                             send_email.delay(current_app.config['EMAIL_HOST'], current_app.config['EMAIL_SENDER'],
                                              current_app.config['EMAIL_SENDER_PASSWORD'],
                                              receivers, f'{rcd.task.name} 测试结果：{"成功" if rcd.state == 1 else "失败"}',
-                                             EmailTemplate.query.order_by(
+                                             rcd.task.email_body_html or EmailTemplate.query.order_by(
                                                  EmailTemplate.timestamp.desc()).first().body_html,
                                              (test_result.tests, test_result.errors, test_result.failures,
                                               test_result.skip) if test_result.tests != 0 else None,
