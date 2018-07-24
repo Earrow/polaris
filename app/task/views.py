@@ -337,6 +337,7 @@ def delete():
         jenkins._server.delete_job(t.name)
 
         for record in t.records:
+            db.session.delete(record.result)
             db.session.delete(record)
 
         db.session.delete(t)

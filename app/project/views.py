@@ -100,6 +100,11 @@ def delete():
     p = Project.query.get(project_id)
 
     if current_user and current_user in p.editors:
+        for task in p.tasks:
+            jenkins._server.delete_job(task.name)
+            db.session.delete(task)
+            current_app.logger.debug(f'deleted task {task}')
+
         for user in p.active_users:
             from itertools import chain
 
@@ -112,11 +117,6 @@ def delete():
                     current_app.logger.debug(f'user {user}\'s active project is set to {pp}')
                     break
 
-        for task in p.tasks:
-            jenkins._server.delete_job(task.name)
-            db.session.delete(task)
-            current_app.logger.debug(f'deleted task {task}')
-
         for application in p.registration_applications:
             db.session.delete(application)
             current_app.logger.debug(f'deleted registration application {application}')
@@ -126,6 +126,7 @@ def delete():
             current_app.logger.debug(f'deleted project application {application}')
 
         for record in p.records:
+            db.session.delete(record.result)
             db.session.delete(record)
             current_app.logger.debug(f'deleted record {record}')
 
