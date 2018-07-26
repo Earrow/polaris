@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 
 from . import admin
 from .. import db
-from ..models import RegistrationApplication, ProjectApplication, Project, Server, OperatingRecord
+from ..models import RegistrationApplication, ProjectApplication, Project, Server, OperatingRecord, User
 from ..decorators import admin_required
 from ..project.forms import ProjectApplyForm
 
@@ -135,7 +135,31 @@ def get_application_number():
 @login_required
 @admin_required
 def operating_records():
-    current_app.logger.debug(f'get {url_for(".get_application_number")}')
+    page = request.args.get('page', 1, type=int)
+    user = request.args.get('user', '')
+    operation = request.args.get('operation', '')
+    current_app.logger.debug(f'get {url_for(".get_application_number", page=page, user=user, operation=operation)}')
 
-    records = OperatingRecord.query.order_by(OperatingRecord.timestamp.desc()).all()
-    return render_template('admin/operating_records.html', operating_record=records)
+    u = User.query.filter_by(email=user).first()
+
+    if u and operation:
+        pagination = (OperatingRecord.query.order_by(OperatingRecord.timestamp.desc())
+                      .filter_by(user=u, operation=operation)
+                      .paginate(page,
+                                per_page=current_app.config['POLARIS_OPERATING_RECORDS_PER_PAGE'], error_out=False))
+    elif u:
+        pagination = (OperatingRecord.query.order_by(OperatingRecord.timestamp.desc())
+                      .filter_by(user=u)
+                      .paginate(page,
+                                per_page=current_app.config['POLARIS_OPERATING_RECORDS_PER_PAGE'], error_out=False))
+    elif operation:
+        pagination = (OperatingRecord.query.order_by(OperatingRecord.timestamp.desc())
+                      .filter_by(operation=operation)
+                      .paginate(page,
+                                per_page=current_app.config['POLARIS_OPERATING_RECORDS_PER_PAGE'], error_out=False))
+    else:
+        pagination = (OperatingRecord.query.order_by(OperatingRecord.timestamp.desc())
+                      .paginate(page,
+                                per_page=current_app.config['POLARIS_OPERATING_RECORDS_PER_PAGE'], error_out=False))
+    records = pagination.items
+    return render_template('admin/operating_records.html', operating_records=records, pagination=pagination, filter_user=user, filter_operation=operation)
