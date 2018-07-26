@@ -7,7 +7,7 @@ from jenkins import JenkinsException
 from . import project
 from .forms import ProjectApplyForm, ProjectEditForm
 from .. import db, jenkins
-from ..models import Project, RegistrationApplication, ProjectApplication, Server
+from ..models import Project, RegistrationApplication, ProjectApplication, Server, OperatingRecord
 
 
 @project.route('/')
@@ -62,6 +62,8 @@ def project_info(project_id):
                 p.info = form.info.data
                 p.server = server
                 db.session.add(p)
+                operating_record = OperatingRecord(user=current_user, operation='修改', project=p)
+                db.session.add(operating_record)
                 db.session.commit()
 
                 current_app.logger.info(f'user {current_user} edited the project {p}')
@@ -131,6 +133,8 @@ def delete():
             current_app.logger.debug(f'deleted record {record}')
 
         db.session.delete(p)
+        operating_record = OperatingRecord(user=current_user, operation='删除', project=p)
+        db.session.add(operating_record)
         db.session.commit()
 
         current_app.logger.info(f'user {current_user} deleted the project {p}')
@@ -153,6 +157,8 @@ def apply():
         p = Project(name=form.name.data, info=form.info.data, server=Server.query.get(form.server_id.data))
         application = ProjectApplication(user=current_user, project=p)
         db.session.add(application)
+        operating_record = OperatingRecord(user=current_user, operation='申请创建', project=p)
+        db.session.add(operating_record)
         db.session.commit()
 
         current_app.logger.info(f'created project application: {application}')
@@ -181,6 +187,8 @@ def register():
     else:
         application = RegistrationApplication(user=current_user, project=p)
         db.session.add(application)
+        operating_record = OperatingRecord(user=current_user, operation='申请加入', project=p)
+        db.session.add(operating_record)
         db.session.commit()
 
         current_app.logger.info(f'created registration application: {application}')

@@ -55,9 +55,9 @@
             <div class="navbar-collapse">
                 <nav class="cbp-spmenu cbp-spmenu-vertical cbp-spmenu-left" id="cbp-spmenu-s1">
                     <ul class="nav" id="side-menu">
-                        <li>
+                        <!--<li>
                             <a href="{{ url_for('main.index') }}"><i class="fa fa-home nav_icon"></i>首页</a>
-                        </li>
+                        </li>-->
                         <li>
                             <a href="#"><i class="fa fa-cogs nav_icon"></i>基础管理<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level collapse">
@@ -118,6 +118,9 @@
                                 </li>
                                 <li>
                                     <a href="{{ url_for('main.email_template_page') }}">邮件通知模板</a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('admin.operating_records') }}">用户操作记录</a>
                                 </li>
                             </ul>
 						</li>

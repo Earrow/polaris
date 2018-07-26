@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 
 from . import admin
 from .. import db
-from ..models import RegistrationApplication, ProjectApplication, Project, Server
+from ..models import RegistrationApplication, ProjectApplication, Project, Server, OperatingRecord
 from ..decorators import admin_required
 from ..project.forms import ProjectApplyForm
 
@@ -23,6 +23,8 @@ def create_project():
         p = Project(name=form.name.data, info=form.info.data, server=Server.query.get(form.server_id.data))
         p.allowed = True
         db.session.add(p)
+        operating_record = OperatingRecord(user=current_user, operation='创建', project=p)
+        db.session.add(operating_record)
         db.session.commit()
 
         current_app.logger.info(f'{current_user} created {p}')
@@ -127,3 +129,13 @@ def get_application_number():
                             f'project applications number: {project_applications_number}')
     return jsonify({'registration_applications_number': registration_applications_number,
                     'project_applications_number': project_applications_number})
+
+
+@admin.route('/operating_records')
+@login_required
+@admin_required
+def operating_records():
+    current_app.logger.debug(f'get {url_for(".get_application_number")}')
+
+    records = OperatingRecord.query.order_by(OperatingRecord.timestamp.desc()).all()
+    return render_template('admin/operating_records.html', operating_record=records)

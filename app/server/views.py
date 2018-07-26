@@ -10,7 +10,7 @@ from jenkins import NotFoundException, JenkinsException
 from . import server
 from .forms import ServerCreateForm, ServerEditForm
 from .. import db, jenkins
-from ..models import Server
+from ..models import Server, OperatingRecord
 
 
 def _add_credential(host, username, password):
@@ -97,6 +97,8 @@ def server_info(server_id):
             s.workspace = form.workspace.data
             s.info = form.info.data
             db.session.add(s)
+            operating_record = OperatingRecord(user=current_user, operation='修改', server=s)
+            db.session.add(operating_record)
             db.session.commit()
 
             current_app.logger.info('{} edited the server {}'.format(current_user, s))
@@ -141,6 +143,8 @@ def create():
             s = Server(host=form.host.data, username=form.username.data, password=form.password.data,
                        workspace=form.workspace.data, info=form.info.data)
             db.session.add(s)
+            operating_record = OperatingRecord(user=current_user, operation='创建', server=s)
+            db.session.add(operating_record)
             db.session.commit()
 
             current_app.logger.debug(f'created server {s}')
@@ -222,6 +226,8 @@ def delete():
         projects_name = ', '.join([project.name for project in s.projects])
 
         db.session.delete(s)
+        operating_record = OperatingRecord(user=current_user, operation='删除', server=s)
+        db.session.add(operating_record)
         db.session.commit()
 
         if projects_name:

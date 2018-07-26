@@ -92,6 +92,7 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     active_project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     records = db.relationship('Record', backref='user', lazy='dynamic')
+    operating_records = db.relationship('OperatingRecord', backref='user', lazy='dynamic')
     testable_projects = db.relationship('Project', secondary=testable_registrations,
                                         backref=db.backref('testers', lazy='dynamic'), lazy='dynamic')
     editable_projects = db.relationship('Project', secondary=editable_registrations,
@@ -187,6 +188,7 @@ class Server(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     projects = db.relationship('Project', backref='server', lazy='dynamic')
+    operating_records = db.relationship('OperatingRecord', backref='server', lazy='dynamic')
     host = db.Column(db.String(64), unique=True, index=True)
     username = db.Column(db.String(64))
     password = db.Column(db.String(64))
@@ -208,6 +210,7 @@ class Project(db.Model):
     registration_applications = db.relationship('RegistrationApplication', backref='project', lazy='dynamic')
     project_applications = db.relationship('ProjectApplication', backref='project', lazy='dynamic')
     records = db.relationship('Record', backref='project', lazy='dynamic')
+    operating_records = db.relationship('OperatingRecord', backref='project', lazy='dynamic')
     name = db.Column(db.String(64), unique=True, index=True)
     info = db.Column(db.Text)
     allowed = db.Column(db.Boolean, default=False)  # 是否已经被批准创建
@@ -233,6 +236,7 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     records = db.relationship('Record', backref='task', lazy='dynamic')
+    operating_records = db.relationship('OperatingRecord', backref='task', lazy='dynamic')
     nickname = db.Column(db.String(64), index=True)
     name = db.Column(db.String(64), index=True)  # 全名，项目名_nickname
     info = db.Column(db.Text)
@@ -352,3 +356,33 @@ class EmailTemplate(db.Model):
 
 
 db.event.listen(EmailTemplate.body, 'set', EmailTemplate.on_changed_body)
+
+
+class OperatingRecord(db.Model):
+    """操作记录。"""
+    __tablename__ = 'operating_records'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    server_id = db.Column(db.Integer, db.ForeignKey('servers.id'))
+    operation = db.Column(db.String(32))
+    task_name = db.Column(db.String(64))
+    project_name = db.Column(db.String(64))
+    server_name = db.Column(db.String(64))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
+
+    def __init__(self, user=None, task=None, project=None, server=None, operation=None):
+        self.user = user
+        self.operation = operation
+        self.task = task
+        self.project = project
+        self.server = server
+
+        self.task_name = task.name if task else None
+        self.project_name = project.name if project else None
+        self.server_name = server.host if server else None
+
+    def __repr__(self):
+        return f'{self.user} {self.operation} {self.task or self.project or self.server}'

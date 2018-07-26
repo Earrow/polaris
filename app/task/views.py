@@ -8,7 +8,7 @@ from jenkins import JenkinsException
 from . import task
 from .. import db, scheduler, jenkins
 from .forms import TaskApplyForm, TaskEditForm
-from ..models import Project, Task, Record
+from ..models import Project, Task, Record, OperatingRecord
 
 
 def _create_job(name, info, command, result_statistics, host):
@@ -205,6 +205,8 @@ def task_info(task_id):
                 t.scheduler_enable = form.scheduler_enable.data
 
             current_app.logger.info(f'{current_user} edited {t}')
+            operating_record = OperatingRecord(user=current_user, operation='修改', task=t)
+            db.session.add(operating_record)
             db.session.commit()
         except ValueError as e:
             t.scheduler_enable = False
@@ -297,6 +299,10 @@ def create():
                     flash('未配置crontab', 'warning')
                     t.scheduler_enable = False
                     db.session.commit()
+
+            operating_record = OperatingRecord(user=current_user, operation='创建', task=t)
+            db.session.add(operating_record)
+            db.session.commit()
         except ValueError as e:
             t.scheduler_enable = False
             db.session.commit()
@@ -341,6 +347,8 @@ def delete():
             db.session.delete(record)
 
         db.session.delete(t)
+        operating_record = OperatingRecord(user=current_user, operation='删除', task=t)
+        db.session.add(operating_record)
         db.session.commit()
     except JenkinsException as e:
         current_app.logger.warning('delete task {} error'.format(t))
