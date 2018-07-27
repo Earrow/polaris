@@ -138,7 +138,7 @@ def operating_records():
     page = request.args.get('page', 1, type=int)
     user = request.args.get('user', '')
     operation = request.args.get('operation', '')
-    current_app.logger.debug(f'get {url_for(".get_application_number", page=page, user=user, operation=operation)}')
+    current_app.logger.debug(f'get {url_for(".operating_records", page=page, user=user, operation=operation)}')
 
     u = User.query.filter_by(email=user).first()
 
@@ -162,4 +162,5 @@ def operating_records():
                       .paginate(page,
                                 per_page=current_app.config['POLARIS_OPERATING_RECORDS_PER_PAGE'], error_out=False))
     records = pagination.items
-    return render_template('admin/operating_records.html', operating_records=records, pagination=pagination, filter_user=user, filter_operation=operation)
+    return render_template('admin/operating_records.html', operating_records=records, pagination=pagination,
+                           filter_user=user, filter_operation=operation)
