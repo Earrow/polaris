@@ -63,13 +63,18 @@ def registration_applications_handle():
     if application_state == 'ok':
         application.state = 1
         application.user.register(application.project)
+        operating_record = OperatingRecord(user=current_user, operation='批准加入申请', project=application.project,
+                                           show_for_admin=True)
 
         current_app.logger.info(f'allow registration application: {application}')
-    elif application_state == 'no':
+    else:  # application_state == 'no'
         application.state = -1
+        operating_record = OperatingRecord(user=current_user, operation='拒绝加入申请', project=application.project,
+                                           show_for_admin=True)
 
         current_app.logger.info(f'disallow registration application: {application}')
 
+    db.session.add(operating_record)
     db.session.commit()
     return redirect(url_for('.registration_applications'))
 
@@ -105,13 +110,20 @@ def project_applications_handle():
         application.user.register(application.project, True)
         db.session.add(application.project)
 
+        operating_record = OperatingRecord(user=current_user, operation='批准创建申请', project=application.project,
+                                           show_for_admin=True)
+
         current_app.logger.info(f'allow project application {application}')
-    elif application_state == 'no':
+    else:  # application_state == 'no'
         application.state = -1
         db.session.delete(application.project)
 
+        operating_record = OperatingRecord(user=current_user, operation='拒绝创建申请', project=application.project,
+                                           show_for_admin=True)
+
         current_app.logger.info(f'disallow project application {application}')
 
+    db.session.add(operating_record)
     db.session.commit()
     return redirect(url_for('.project_applications'))
 

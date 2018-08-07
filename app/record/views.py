@@ -10,7 +10,7 @@ from flask_login import current_user, login_required
 from . import record
 from .. import db, jenkins
 from ..celery_tasks import send_email
-from ..models import Record, Project, Task, Result, EmailTemplate
+from ..models import Record, Project, Task, Result, EmailTemplate, OperatingRecord
 from ..tools import get_sftp_file
 
 r = redis.Redis('localhost')
@@ -265,8 +265,11 @@ def do_test():
                 return jsonify(state='busy')
 
             jenkins._server.build_job(t.name)
-            test_record = Record(user=current_user, project=p, task=t, state=0, version=version, build_number=build_number)
+            test_record = Record(user=current_user, project=p, task=t, state=0, version=version,
+                                 build_number=build_number)
+            operating_record = OperatingRecord(user=current_user, operation='执行测试', task=t)
             db.session.add(test_record)
+            db.session.add(operating_record)
             db.session.commit()
 
             current_app.logger.info(f'created record: {test_record}')

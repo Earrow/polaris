@@ -157,7 +157,7 @@ def apply():
         p = Project(name=form.name.data, info=form.info.data, server=Server.query.get(form.server_id.data))
         application = ProjectApplication(user=current_user, project=p)
         db.session.add(application)
-        operating_record = OperatingRecord(user=current_user, operation='申请创建', project=p)
+        operating_record = OperatingRecord(user=current_user, operation='申请创建', project=p, show_for_admin=True)
         db.session.add(operating_record)
         db.session.commit()
 
@@ -187,7 +187,7 @@ def register():
     else:
         application = RegistrationApplication(user=current_user, project=p)
         db.session.add(application)
-        operating_record = OperatingRecord(user=current_user, operation='申请加入', project=p)
+        operating_record = OperatingRecord(user=current_user, operation='申请加入', project=p, show_for_admin=True)
         db.session.add(operating_record)
         db.session.commit()
 

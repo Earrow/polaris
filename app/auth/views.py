@@ -21,7 +21,7 @@ def login():
             login_user(user, form.remember_me.data)
 
             current_app.logger.info(f'user {user} login')
-            return redirect(request.args.get('next') or url_for('project.project_list'))
+            return redirect(request.args.get('next') or url_for('main.index'))
 
         current_app.logger.info(f'user {user} login failed, email or password wrong')
         flash('账号或密码错误', 'danger')
@@ -38,7 +38,7 @@ def logout():
     logout_user()
 
     current_app.logger.info(f'user {current_user} logout')
-    return redirect(url_for('project.project_list'))
+    return redirect(url_for('main.index'))
 
 
 @auth.route('/register/', methods=['GET', 'POST'])

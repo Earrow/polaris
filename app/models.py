@@ -209,8 +209,8 @@ class Project(db.Model):
     active_users = db.relationship('User', backref='active_project', lazy='dynamic')
     registration_applications = db.relationship('RegistrationApplication', backref='project', lazy='dynamic')
     project_applications = db.relationship('ProjectApplication', backref='project', lazy='dynamic')
-    records = db.relationship('Record', backref='project', lazy='dynamic')
     operating_records = db.relationship('OperatingRecord', backref='project', lazy='dynamic')
+    records = db.relationship('Record', backref='project', lazy='dynamic')
     name = db.Column(db.String(64), unique=True, index=True)
     info = db.Column(db.Text)
     allowed = db.Column(db.Boolean, default=False)  # 是否已经被批准创建
@@ -357,6 +357,11 @@ class EmailTemplate(db.Model):
 
 db.event.listen(EmailTemplate.body, 'set', EmailTemplate.on_changed_body)
 
+# 操作记录的所属项目
+target_project = db.Table('target_projects',
+                          db.Column('operating_record_id', db.Integer, db.ForeignKey('operating_records.id')),
+                          db.Column('project_id', db.Integer, db.ForeignKey('projects.id')))
+
 
 class OperatingRecord(db.Model):
     """操作记录。"""
@@ -366,23 +371,28 @@ class OperatingRecord(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    target_projects = db.relationship('Project', secondary=target_project,
+                                      backref=db.backref('target_operating_record', lazy='dynamic'), lazy='dynamic')
     server_id = db.Column(db.Integer, db.ForeignKey('servers.id'))
     operation = db.Column(db.String(32))
     task_name = db.Column(db.String(64))
     project_name = db.Column(db.String(64))
     server_name = db.Column(db.String(64))
+    show_for_admin = db.Column(db.Boolean)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.now)
 
-    def __init__(self, user=None, task=None, project=None, server=None, operation=None):
+    def __init__(self, user=None, task=None, project=None, server=None, operation=None, show_for_admin=False):
         self.user = user
         self.operation = operation
         self.task = task
         self.project = project
         self.server = server
+        self.target_projects = [project] if project else [task.project] if task else server.projects
+        self.show_for_admin = show_for_admin
 
         self.task_name = task.name if task else None
         self.project_name = project.name if project else None
         self.server_name = server.host if server else None
 
     def __repr__(self):
-        return f'{self.user} {self.operation} {self.task or self.project or self.server}'
+        return f'{self.user} {self.operation} {self.task_name or self.project_name or self.server_name}'

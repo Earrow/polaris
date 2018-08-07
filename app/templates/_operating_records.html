@@ -1,0 +1,35 @@
+<div class="tables">
+    <div class="bs-example widget-shadow" data-example-id="hoverable-table">
+        <table class="table table-hover records">
+            <thead>
+                <tr>
+                    <th>用户</th>
+                    <th>操作</th>
+                    <th>对象</th>
+                    <th>时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in operating_records -%}
+                <tr>
+                    <td>{{ record.user.email }}</td>
+                    <td>{{ record.operation }}</td>
+                    <td>
+                        {% if record.task_name %}
+                            <a href="{{ url_for('task.task_info', task_id=record.task.id) }}">任务：{{ record.task_name }}</a>
+                            {% if not record.task %}<span class="badge badge-secondary">已删除</span>{% endif %}
+                        {% elif record.project_name %}
+                            <a href="{{ url_for('project.project_info', project_id=record.project.id) }}">项目：{{ record.project_name }}</a>
+                            {% if not record.project %}<span class="badge badge-secondary">已删除</span>{% endif %}
+                        {% elif record.server_name %}
+                            <a href="{{ url_for('server.server_info', server_id=record.server.id) }}">服务器：{{ record.server_name }}</a>
+                            {% if not record.server %}<span class="badge badge-secondary">已删除</span>{% endif %}
+                        {% endif %}
+                    </td>
+                    <td>{{ record.timestamp }}</td>
+                </tr>
+                {%- endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

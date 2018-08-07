@@ -24,43 +24,12 @@
 {% endblock %}
 
 {% block page_content %}
-<div class="tables">
-    <div class="bs-example widget-shadow" data-example-id="hoverable-table">
-        <h4>用户操作记录：</h4>
-        <div id="filter">
-            用户：<input type="text" id="filter-user" value="{{ filter_user }}" />
-            操作：<input type="text" id="filter-operation"  value="{{ filter_operation }}" />
-            <button type="button" class="btn btn-primary" onclick="filter()">筛选</button>
-        </div>
-        <table class="table table-bordered records">
-            <tr>
-                <th>用户</th>
-                <th>操作</th>
-                <th>对象</th>
-                <th>时间</th>
-            </tr>
-            {% for record in operating_records -%}
-            <tr>
-                <td>{{ record.user.email }}</td>
-                <td>{{ record.operation }}</td>
-                <td>
-                    {% if record.task_name %}
-                        <a href="{{ url_for('task.task_info', task_id=record.task.id) }}">任务：{{ record.task_name }}</a>
-                        {% if not record.task %}<span class="badge badge-secondary">已删除</span>{% endif %}
-                    {% elif record.project_name %}
-                        <a href="{{ url_for('project.project_info', project_id=record.project.id) }}">项目：{{ record.project_name }}</a>
-                        {% if not record.project %}<span class="badge badge-secondary">已删除</span>{% endif %}
-                    {% elif record.server_name %}
-                        <a href="{{ url_for('server.server_info', server_id=record.server.id) }}">服务器：{{ record.server_name }}</a>
-                        {% if not record.server %}<span class="badge badge-secondary">已删除</span>{% endif %}
-                    {% endif %}
-                </td>
-                <td>{{ record.timestamp }}</td>
-            </tr>
-            {%- endfor %}
-        </table>
-    </div>
+<div id="filter">
+    用户：<input type="text" id="filter-user" value="{{ filter_user }}" />
+    操作：<input type="text" id="filter-operation"  value="{{ filter_operation }}" />
+    <button type="button" class="btn btn-primary" onclick="filter()">筛选</button>
 </div>
+{% include "_operating_records.html" %}
 
 <div class="pagination">
     {{ macros.pagination_widget(pagination, '.operating_records', user=filter_user, operation=filter_operation) }}

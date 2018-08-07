@@ -148,6 +148,10 @@ def create():
             db.session.commit()
 
             current_app.logger.debug(f'created server {s}')
+        except requests.exceptions.ConnectionError as e:
+            current_app.logger.error('jenkins connect error')
+            current_app.logger.exception(e)
+            flash('内部错误', 'danger')
         except requests.exceptions.HTTPError as e:
             current_app.logger.error('jenkins add credential error')
             current_app.logger.exception(e)
@@ -225,13 +229,13 @@ def delete():
 
         projects_name = ', '.join([project.name for project in s.projects])
 
-        db.session.delete(s)
         operating_record = OperatingRecord(user=current_user, operation='删除', server=s)
         db.session.add(operating_record)
+        db.session.delete(s)
         db.session.commit()
 
         if projects_name:
-            flash(f'请重新配置{projects_name}项目的测试服务器', 'warning')
+            flash(f'请重新配置【{projects_name}】项目的测试服务器', 'warning')
         current_app.logger.info(f'{current_user} deleted the server {s}')
     except NotFoundException:
         # 平台上配置的服务器不在jenkins时会出现此错误
@@ -241,7 +245,7 @@ def delete():
         db.session.commit()
 
         if projects_name:
-            flash(f'请重新配置{projects_name}项目的测试服务器', 'warning')
+            flash(f'请重新配置【{projects_name}】项目的测试服务器', 'warning')
         current_app.logger.info(f'{current_user} deleted the server {s}')
     except JenkinsException as e:
         current_app.logger.error('jenkins delete node {} error'.format(s))

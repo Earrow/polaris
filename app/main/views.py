@@ -1,17 +1,44 @@
 # coding=utf-8
 
-from flask import redirect, url_for, render_template, current_app
+from itertools import chain
+
+from flask import redirect, url_for, render_template, current_app, request
+from flask_login import current_user
 
 from . import main
 from .forms import ManualForm, EmailTemplateForm
 from .. import db
-from ..models import Manual, EmailTemplate
+from ..models import Manual, EmailTemplate, OperatingRecord, Project
 from ..decorators import admin_required
 
 
 @main.route('/')
 def index():
-    return redirect(url_for('project.project_list'))
+    page = request.args.get('page', 1, type=int)
+
+    testable_projects = None
+    editable_projects = None
+    if current_user.is_authenticated:
+        testable_projects = current_user.testable_projects or []
+        editable_projects = current_user.editable_projects or []
+
+    if testable_projects or editable_projects:
+        show_records = True
+
+        pagination = (
+            OperatingRecord.query.order_by(OperatingRecord.timestamp.desc()).join(OperatingRecord.target_projects)
+            .filter(OperatingRecord.show_for_admin == False)
+            .filter(Project.id.in_(p.id for p in chain(editable_projects, testable_projects)))
+            .paginate(page,
+                      per_page=current_app.config['POLARIS_OPERATING_RECORDS_PER_PAGE'], error_out=False))
+        records = pagination.items
+
+        return render_template('main/index.html', operating_records=records, pagination=pagination,
+                               show_records=show_records)
+    else:
+        show_records = False
+
+        return render_template('main/index.html', show_records=show_records)
 
 
 @main.route('/help/')

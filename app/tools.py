@@ -1,7 +1,9 @@
 # coding=utf-8
 
+import collections
 
-class NestDict(dict):
+
+class NestDict(collections.UserDict):
     def __missing__(self, key):
         value = self[key] = type(self)()
         return value
