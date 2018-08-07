@@ -102,7 +102,7 @@ def _create_job(name, info, command, result_statistics, host):
     project.append(ET.Element('buildWrappers'))
 
     config = ET.tostring(project).decode('utf-8')
-    jenkins._server.create_job(name, config)
+    jenkins.create_job(name, config)
 
     return config
 
@@ -138,7 +138,7 @@ def task_info(task_id):
         try:
             import xml.etree.ElementTree as ET
 
-            config = jenkins._server.get_job_config(t.name)
+            config = jenkins.get_job_config(t.name)
             root = ET.fromstring(config)
 
             if form.info.data != t.info:
@@ -157,7 +157,7 @@ def task_info(task_id):
                 root.find('.//org.jenkinsci.plugins.postbuildscript.model.PostBuildStep//command').text = \
                     form.result_statistics.data.replace('\r', '')
 
-            jenkins._server.reconfig_job(t.name, ET.tostring(root).decode('utf-8'))
+            jenkins.reconfig_job(t.name, ET.tostring(root).decode('utf-8'))
 
             t.nickname = form.name.data
             t.info = form.info.data
@@ -187,7 +187,7 @@ def task_info(task_id):
                         spec = ET.SubElement(timer_trigger, 'spec')
                         spec.text = form.crontab.data
 
-                    jenkins._server.reconfig_job(t.name, ET.tostring(root).decode('utf-8'))
+                    jenkins.reconfig_job(t.name, ET.tostring(root).decode('utf-8'))
                     # 防止jenkins出错，对定时的设置单独修改
                     t.crontab = form.crontab.data
                     t.scheduler_enable = form.scheduler_enable.data
@@ -199,7 +199,7 @@ def task_info(task_id):
                 timer_trigger = triggers.find('hudson.triggers.TimerTrigger')
                 if timer_trigger:
                     triggers.remove(timer_trigger)
-                    jenkins._server.reconfig_job(t.name, ET.tostring(root).decode('utf-8'))
+                    jenkins.reconfig_job(t.name, ET.tostring(root).decode('utf-8'))
 
                 t.crontab = form.crontab.data
                 t.scheduler_enable = form.scheduler_enable.data
@@ -259,7 +259,7 @@ def create():
         task_name = f'{p.name}_{form.name.data}'
 
         try:
-            jenkins._server.delete_job(task_name)
+            jenkins.delete_job(task_name)
             current_app.logger.warning(f'{task_name} already exist in jenkins, delete it')
         except JenkinsException:
             pass
@@ -282,7 +282,7 @@ def create():
 
                     import xml.etree.ElementTree as ET
 
-                    config = jenkins._server.get_job_config(t.name)
+                    config = jenkins.get_job_config(t.name)
                     root = ET.fromstring(config)
 
                     # 校验crontab格式
@@ -294,7 +294,7 @@ def create():
                     spec = ET.SubElement(timer_trigger, 'spec')
                     spec.text = form.crontab.data
 
-                    jenkins._server.reconfig_job(t.name, ET.tostring(root).decode('utf-8'))
+                    jenkins.reconfig_job(t.name, ET.tostring(root).decode('utf-8'))
                 else:
                     flash('未配置crontab', 'warning')
                     t.scheduler_enable = False
@@ -340,7 +340,7 @@ def delete():
         abort(403)
 
     try:
-        jenkins._server.delete_job(t.name)
+        jenkins.delete_job(t.name)
 
         for record in t.records:
             db.session.delete(record.result)

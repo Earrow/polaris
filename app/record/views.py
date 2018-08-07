@@ -60,7 +60,7 @@ def console(record_id):
     current_app.logger.debug('get {}'.format(url_for('.console', record_id=record_id)))
 
     try:
-        console_output = jenkins._server.get_build_console_output(test_record.task.name, test_record.build_number).replace(
+        console_output = jenkins.get_build_console_output(test_record.task.name, test_record.build_number).replace(
             '\r', '').replace('\n', '<br>')
         r.set(f'console_output:{test_record.task.name}:{test_record.build_number}', console_output)
     except JenkinsException as e:
@@ -84,10 +84,10 @@ def console_check():
 
     try:
         console_output_new = (
-            jenkins._server.get_build_console_output(task_name, build_number).replace('\r', '').replace('\n', '<br>'))
+            jenkins.get_build_console_output(task_name, build_number).replace('\r', '').replace('\n', '<br>'))
         r.set(f'console_output:{task_name}:{build_number}', console_output_new)
 
-        build_info = jenkins._server.get_build_info(task_name, build_number)
+        build_info = jenkins.get_build_info(task_name, build_number)
         if build_info['result']:
             end = True
             current_app.logger.info('build end')
@@ -159,7 +159,7 @@ def check_state():
 
     if task:
         try:
-            job_info = jenkins._server.get_job_info(task.name)
+            job_info = jenkins.get_job_info(task.name)
             build = job_info['builds'][0]
             build_number = build['number']
 
@@ -173,9 +173,9 @@ def check_state():
 
             # 查询记录是否已经执行完毕
             if rcd.state == 0:
-                build_info = jenkins._server.get_build_info(rcd.task.name, rcd.build_number)
+                build_info = jenkins.get_build_info(rcd.task.name, rcd.build_number)
                 if build_info['result']:
-                    console_output = jenkins._server.get_build_console_output(rcd.task.name, rcd.build_number)
+                    console_output = jenkins.get_build_console_output(rcd.task.name, rcd.build_number)
 
                     test_result = Result(record=rcd, status=0 if build_info['result'] == 'SUCCESS' else -1,
                                          cmd_line=console_output, tests=0, errors=0, failures=0, skip=0)
@@ -212,7 +212,8 @@ def check_state():
                         for att in rcd.task.email_attachments.split(';'):
                             current_app.logger.debug(f'reading remote file: {att}')
                             try:
-                                with get_sftp_file(rcd.project.server.host, rcd.project.server.username, rcd.project.server.password, att, 'rb') as fp:
+                                with get_sftp_file(rcd.project.server.host, rcd.project.server.username,
+                                                   rcd.project.server.password, att, 'rb') as fp:
                                     data = fp.read()
                                     attachments.append((att.replace('\\', '/').split('/')[-1], data))
                             except FileNotFoundError:
@@ -254,17 +255,17 @@ def do_test():
         return jsonify(state='no_permission')
 
     try:
-        build_number = jenkins._server.get_job_info(t.name)['nextBuildNumber']
+        build_number = jenkins.get_job_info(t.name)['nextBuildNumber']
         current_app.logger.debug(f'build number: {build_number}')
 
-        if not jenkins._server.get_node_info(p.server.host)['offline']:
+        if not jenkins.get_node_info(p.server.host)['offline']:
             # 测试服务器在线
             if Record.query.filter_by(task=t, state=0).first() or Record.query.filter_by(task=t, state=-2).first():
                 # 该任务正在执行中
                 current_app.logger.debug('the task is in testing')
                 return jsonify(state='busy')
 
-            jenkins._server.build_job(t.name)
+            jenkins.build_job(t.name)
             test_record = Record(user=current_user, project=p, task=t, state=0, version=version,
                                  build_number=build_number)
             operating_record = OperatingRecord(user=current_user, operation='执行测试', task=t)

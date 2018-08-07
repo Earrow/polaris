@@ -52,11 +52,11 @@ def project_info(project_id):
                     import xml.etree.ElementTree as ET
 
                     for task in p.tasks:
-                        config = jenkins._server.get_job_config(task.name)
+                        config = jenkins.get_job_config(task.name)
                         root = ET.fromstring(config)
 
                         root.find('assignedNode').text = server.host
-                        jenkins._server.reconfig_job(task.name, ET.tostring(root).decode('utf-8'))
+                        jenkins.reconfig_job(task.name, ET.tostring(root).decode('utf-8'))
 
                 p.name = form.name.data
                 p.info = form.info.data
@@ -103,7 +103,7 @@ def delete():
 
     if current_user and current_user in p.editors:
         for task in p.tasks:
-            jenkins._server.delete_job(task.name)
+            jenkins.delete_job(task.name)
             db.session.delete(task)
             current_app.logger.debug(f'deleted task {task}')
 

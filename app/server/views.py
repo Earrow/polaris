@@ -70,7 +70,7 @@ def server_info(server_id):
 
             import xml.etree.ElementTree as ET
 
-            config = jenkins._server.get_node_config(s.host)
+            config = jenkins.get_node_config(s.host)
             root = ET.fromstring(config)
 
             if form.username.data != s.username or form.password.data != s.password:
@@ -89,7 +89,7 @@ def server_info(server_id):
 
                 current_app.logger.debug('info updated')
 
-            jenkins._server.reconfig_node(s.host, ET.tostring(root).decode('utf-8'))
+            jenkins.reconfig_node(s.host, ET.tostring(root).decode('utf-8'))
 
             s.host = form.host.data
             s.username = form.username.data
@@ -133,12 +133,12 @@ def create():
             credential_id = _add_credential(form.host.data, form.username.data, form.password.data)
             current_app.logger.debug(f'credential_id: {credential_id}')
 
-            if not jenkins._server.node_exists(form.host.data):
-                jenkins._server.create_node(form.host.data, numExecutors=5, nodeDescription=form.info.data,
-                                            remoteFS=form.workspace.data, labels=form.host.data, exclusive=True,
-                                            launcher='hudson.plugins.sshslaves.SSHLauncher',
-                                            launcher_params={'port': 22, 'credentialsId': credential_id,
-                                                             'host': form.host.data})
+            if not jenkins.node_exists(form.host.data):
+                jenkins.create_node(form.host.data, numExecutors=5, nodeDescription=form.info.data,
+                                    remoteFS=form.workspace.data, labels=form.host.data, exclusive=True,
+                                    launcher='hudson.plugins.sshslaves.SSHLauncher',
+                                    launcher_params={'port': 22, 'credentialsId': credential_id,
+                                                     'host': form.host.data})
 
             s = Server(host=form.host.data, username=form.username.data, password=form.password.data,
                        workspace=form.workspace.data, info=form.info.data)
@@ -173,7 +173,7 @@ def check_state():
     s = Server.query.get(request.args.get('server_id', type=int))
 
     try:
-        node_info = jenkins._server.get_node_info(s.host)
+        node_info = jenkins.get_node_info(s.host)
 
         if not node_info['offline']:
             s.workspace = node_info['monitorData']['hudson.node_monitors.DiskSpaceMonitor']['path']
@@ -204,7 +204,7 @@ def enable():
     server_id = request.args.get('server_id', type=int)
     s = Server.query.get(server_id)
     try:
-        jenkins._server.enable_node(s.host)
+        jenkins.enable_node(s.host)
     except NotFoundException:
         # 平台上配置的服务器不在jenkins时会出现此错误
         pass
@@ -225,7 +225,7 @@ def delete():
     current_app.logger.debug('get {}'.format(url_for('.delete')))
 
     try:
-        jenkins._server.delete_node(s.host)
+        jenkins.delete_node(s.host)
 
         projects_name = ', '.join([project.name for project in s.projects])
 
