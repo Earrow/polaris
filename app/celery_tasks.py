@@ -4,7 +4,7 @@ import redis
 from flask import current_app
 
 from . import db, jenkins, celery_app
-from .tools import gen_analysis_pic
+from .tools import gen_analysis_pic, get_sftp_file
 from .models import Record, Project, Task, Result, EmailTemplate
 
 r = redis.Redis('localhost')
@@ -137,12 +137,24 @@ def check_state():
                         if rcd.task.email_notification_enable and rcd.task.email_receivers:
                             receivers = rcd.task.email_receivers.replace('， ', ',').replace(', ', ',').replace('，', ',')
                             receivers = receivers.split(',')
+
+                            attachments = []
+                            for att in rcd.task.email_attachments.split(';'):
+                                current_app.logger.debug(f'reading remote file: {att}')
+                                try:
+                                    with get_sftp_file(rcd.project.server.host, rcd.project.server.username,
+                                                       rcd.project.server.password, att, 'rb') as fp:
+                                        data = fp.read()
+                                        attachments.append((att.replace('\\', '/').split('/')[-1], data))
+                                except FileNotFoundError:
+                                    current_app.logger.error('file not found')
+                            attachments.append(
+                                ('console.log', test_result.cmd_line.replace('\n', '\r\n').encode('utf8')))
+
                             send_email.delay(current_app.config['EMAIL_HOST'], current_app.config['EMAIL_SENDER'],
                                              current_app.config['EMAIL_SENDER_PASSWORD'],
                                              receivers, f'{rcd.task.name} 测试结果：{"成功" if rcd.state == 1 else "失败"}',
                                              rcd.task.email_body_html or EmailTemplate.query.order_by(
                                                  EmailTemplate.timestamp.desc()).first().body_html,
                                              (test_result.tests, test_result.errors, test_result.failures,
-                                              test_result.skip) if test_result.tests != 0 else None,
-                                             [('console.log',
-                                               test_result.cmd_line.replace('\n', '\r\n').encode('utf8'))])
+                                              test_result.skip) if test_result.tests != 0 else None, attachments)
