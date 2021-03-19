@@ -28,7 +28,7 @@ greenlet==0.4.13
 html5lib==1.0.1
 idna==2.6
 itsdangerous==0.24
-Jinja2==2.10
+Jinja2==2.11.3
 kiwisolver==1.0.1
 kombu==4.2.1
 lxml==4.2.1
