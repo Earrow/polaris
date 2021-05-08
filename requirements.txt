@@ -14,7 +14,7 @@ click==6.7
 cryptography==2.2
 cycler==0.10.0
 dominate==2.3.1
-eventlet==0.23.0
+eventlet==0.31.0
 Flask==1.0.2
 Flask-APScheduler==1.8.0
 Flask-Bootstrap==3.3.7.1
