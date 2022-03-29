@@ -38,7 +38,7 @@ MarkupSafe==1.0
 matplotlib==2.2.2
 multi-key-dict==2.0.3
 numpy==1.14.3
-paramiko==2.4.1
+paramiko==2.10.1
 pbr==4.0.1
 pyasn1==0.4.2
 pycparser==2.18
