@@ -37,7 +37,7 @@ Markdown==2.6.11
 MarkupSafe==1.0
 matplotlib==2.2.2
 multi-key-dict==2.0.3
-numpy==1.14.3
+numpy==1.22.0
 paramiko==2.4.1
 pbr==4.0.1
 pyasn1==0.4.2
